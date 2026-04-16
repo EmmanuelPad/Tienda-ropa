@@ -1,12 +1,10 @@
 "use client";
 import { FormEvent } from "react";
 import PublicHeader from "@/components/layout/PublicHeader";
+
 import React from "react";
+
 import { useState } from "react";
-
-import { auth,configureAuthPersistence } from "@/lib/firebase-cilent";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-
 
 
 function Login() {
@@ -99,3 +97,5 @@ function Login() {
     </main>
   );
 }
+
+export default Login;

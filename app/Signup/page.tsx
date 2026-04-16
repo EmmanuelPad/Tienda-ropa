@@ -3,16 +3,7 @@
 import { FormEvent, useState } from "react";
 import PublicHeader from "@/components/layout/PublicHeader";
 
-import Image from "next/image";
-import Link from "next/link";
-
-import React from "react";
-import { FormEvent, useState} from "react";
-
-import { auth, configureAuthPersistence } from "@/lib/firebase-client";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-
-export default function Signup() {
+function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,7 +28,7 @@ export default function Signup() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <PublicHeader />
+      <PublicHeader issignup={true} />
 
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl sm:p-10">
@@ -120,3 +111,5 @@ export default function Signup() {
     </main>
   );
 }
+
+export default Signup;
