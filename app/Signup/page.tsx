@@ -3,6 +3,15 @@
 import { FormEvent, useState } from "react";
 import PublicHeader from "@/components/layout/PublicHeader";
 
+import Image from "next/image";
+import Link from "next/link";
+
+import React from "react";
+import { FormEvent, useState} from "react";
+
+import { auth, configureAuthPersistence } from "@/lib/firebase-client";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+
 export default function Signup() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
