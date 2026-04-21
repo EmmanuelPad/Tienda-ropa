@@ -20,12 +20,12 @@ function PublicHeader({islogin = false, issignup = false}: {islogin?: boolean; i
         </a>
 
         <nav className="hidden items-center gap-8 md:flex">
-          <a href="#categorias" className="text-sm font-medium text-white hover:text-pink-300">
-            Categorías
-          </a>
-          <a href="#sobre-nosotros" className="text-sm font-medium text-white hover:text-pink-300">
+          <Link href="/Productos" className="text-sm font-medium text-white hover:text-pink-300">
+            Productos
+          </Link>
+          <Link href="#sobre-nosotros" className="text-sm font-medium text-white hover:text-pink-300">
             Sobre Nosotros
-          </a>
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">

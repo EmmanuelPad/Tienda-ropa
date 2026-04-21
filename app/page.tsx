@@ -28,10 +28,10 @@ export default function Home() {
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <a
-              href="#categorias"
+              href="#productos"
               className="rounded-md bg-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-500/30 transition hover:bg-pink-400"
             >
-              Explorar Categorías
+              Ver Productos Más Vendidos
             </a>
             <a
               href="#sobre-nosotros"
@@ -43,56 +43,102 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="categorias" className="py-10 ">
+      <section id="productos" className="py-10 ">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" >
           <div className="overflow-hidden rounded-[2rem] bg-white shadow-2xl ring-1 ring-black/5">
             <div className="px-6 py-10 sm:px-10 sm:py-12 lg:px-12">
               <div className="mb-10 max-w-2xl">
-                <h2 className="text-3xl font-bold tracking-tight text-gray-900">Categorías Destacadas</h2>
+                <h2 className="text-3xl font-bold tracking-tight text-gray-900">Productos Más Vendidos</h2>
                 <p className="mt-4 text-lg text-gray-600">
-                  Descubre nuestras categorías más populares y encuentra tu estilo perfecto.
+                  Los favoritos de nuestros clientes. Descubre las prendas que más se llevan esta temporada.
                 </p>
               </div>
 
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                <a href="#" className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-                  <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-pink-500 text-white shadow-sm transition group-hover:bg-pink-400">
-                    <span className="text-2xl">👗</span>
+                <div className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+                  <div className="mb-4 aspect-square overflow-hidden rounded-2xl bg-slate-100 flex items-center justify-center">
+                    <span className="text-4xl">👗</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900">Mujer</h3>
-                  <p className="mt-3 text-sm text-gray-600">
-                    Vestidos, blusas y outfits femeninos para cada ocasión.
-                  </p>
-                </a>
+                  <div className="mb-2">
+                    <span className="inline-block rounded-full bg-pink-500/20 px-2 py-1 text-xs font-medium text-pink-600">
+                      Mujer
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">Vestido Elegante Negro</h3>
+                  <p className="mt-2 text-sm text-gray-600">Versátil para ocasiones especiales</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xl font-bold text-pink-600">$850</span>
+                    <button className="rounded-full bg-pink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-400">
+                      Agregar
+                    </button>
+                  </div>
+                </div>
 
-                <a href="#" className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-                  <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500 text-white shadow-sm transition group-hover:bg-indigo-400">
-                    <span className="text-2xl">👔</span>
+                <div className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+                  <div className="mb-4 aspect-square overflow-hidden rounded-2xl bg-slate-100 flex items-center justify-center">
+                    <span className="text-4xl">👖</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900">Hombre</h3>
-                  <p className="mt-3 text-sm text-gray-600">
-                    Camisas, jeans y looks casuales o formales con estilo.
-                  </p>
-                </a>
+                  <div className="mb-2">
+                    <span className="inline-block rounded-full bg-indigo-500/20 px-2 py-1 text-xs font-medium text-indigo-600">
+                      Hombre
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">Jeans Clásicos</h3>
+                  <p className="mt-2 text-sm text-gray-600">Corte recto, cómodos y duraderos</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xl font-bold text-pink-600">$650</span>
+                    <button className="rounded-full bg-pink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-400">
+                      Agregar
+                    </button>
+                  </div>
+                </div>
 
-                <a href="#" className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-                  <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-green-500 text-white shadow-sm transition group-hover:bg-green-400">
-                    <span className="text-2xl">👜</span>
+                <div className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+                  <div className="mb-4 aspect-square overflow-hidden rounded-2xl bg-slate-100 flex items-center justify-center">
+                    <span className="text-4xl">🧥</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900">Accesorios</h3>
-                  <p className="mt-3 text-sm text-gray-600">
-                    Bolsos, cinturones y complementos que elevan tu look.
-                  </p>
-                </a>
+                  <div className="mb-2">
+                    <span className="inline-block rounded-full bg-slate-700/20 px-2 py-1 text-xs font-medium text-slate-700">
+                      Hombre
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">Chaqueta de Cuero</h3>
+                  <p className="mt-2 text-sm text-gray-600">Estilo vintage, cuero genuino</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xl font-bold text-pink-600">$1200</span>
+                    <button className="rounded-full bg-pink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-400">
+                      Agregar
+                    </button>
+                  </div>
+                </div>
 
-                <a href="#" className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
-                  <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-700 text-white shadow-sm transition group-hover:bg-slate-600">
-                    <span className="text-2xl">✨</span>
+                <div className="group rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg">
+                  <div className="mb-4 aspect-square overflow-hidden rounded-2xl bg-slate-100 flex items-center justify-center">
+                    <span className="text-4xl">👟</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900">Nuevas Llegadas</h3>
-                  <p className="mt-3 text-sm text-gray-600">
-                    Lo último en moda con las piezas más actuales de la temporada.
-                  </p>
+                  <div className="mb-2">
+                    <span className="inline-block rounded-full bg-green-500/20 px-2 py-1 text-xs font-medium text-green-600">
+                      Unisex
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">Zapatos Deportivos</h3>
+                  <p className="mt-2 text-sm text-gray-600">Cómodos para actividades diarias</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="text-xl font-bold text-pink-600">$750</span>
+                    <button className="rounded-full bg-pink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-400">
+                      Agregar
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-10 text-center">
+                <a
+                  href="/Productos"
+                  className="inline-flex items-center gap-2 rounded-md bg-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-500/30 transition hover:bg-pink-400"
+                >
+                  Ver Todos los Productos
+                  <span aria-hidden="true">→</span>
                 </a>
               </div>
             </div>
