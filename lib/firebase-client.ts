@@ -1,5 +1,6 @@
 import { getApps, initializeApp } from "firebase/app";
 import { getAuth, browserLocalPersistence, browserSessionPersistence } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
 
@@ -14,6 +15,7 @@ const firebaseConfig =
 // Initialize Firebase
 export const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 export const auth = getAuth(app); 
+export const firestore = getFirestore(app);
 export async function configureAuthPersistence(remember: boolean) 
 {
     await auth.setPersistence(remember ? browserLocalPersistence : browserSessionPersistence);

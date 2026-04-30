@@ -2,6 +2,11 @@
 
 import { FormEvent, useState } from "react";
 import PublicHeader from "@/components/layout/PublicHeader";
+import { auth, configureAuthPersistence } from "@/lib/firebase-client";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { firestore } from "@/lib/firebase-client";
+import { useRouter } from "next/navigation";
 
 function Signup() 
 {
@@ -10,21 +15,81 @@ function Signup()
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error" | "">("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setLoading(true);
+    setMessage("");
 
     if (!name || !email || !password || !confirmPassword) {
       setMessage("Por favor completa todos los campos.");
+      setMessageType("error");
+      setLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
       setMessage("Las contraseñas no coinciden.");
+      setMessageType("error");
+      setLoading(false);
       return;
     }
 
-    setMessage("Registro simulado. Aquí puedes conectar tu lógica de autenticación.");
+    if (password.length < 6) {
+      setMessage("La contraseña debe tener al menos 6 caracteres.");
+      setMessageType("error");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Configurar persistencia
+      await configureAuthPersistence(false);
+
+      // Crear usuario con correo y contraseña
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+      // Actualizar perfil con el nombre
+      await updateProfile(userCredential.user, {
+        displayName: name,
+      });
+
+      // Guardar usuario en Firestore con rol "user" por defecto
+      await setDoc(doc(firestore, "users", userCredential.user.uid), {
+        uid: userCredential.user.uid,
+        email: email,
+        displayName: name,
+        role: "user",  // Rol por defecto
+        createdAt: new Date().toISOString(),
+      });
+
+      setMessage("Registro exitoso. Redirigiendo...");
+      setMessageType("success");
+
+      // Redirigir después de 2 segundos
+      setTimeout(() => {
+        router.push("/");
+      }, 2000);
+    } catch (error: any) {
+      console.error("Error en registro:", error);
+      
+      // Mensajes de error específicos
+      if (error.code === "auth/email-already-in-use") {
+        setMessage("Este correo ya está registrado.");
+      } else if (error.code === "auth/invalid-email") {
+        setMessage("El correo no es válido.");
+      } else if (error.code === "auth/weak-password") {
+        setMessage("La contraseña es muy débil.");
+      } else {
+        setMessage("Error en el registro: " + (error.message || "Intenta de nuevo"));
+      }
+      setMessageType("error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -92,16 +157,21 @@ function Signup()
 
             <button
               type="submit"
-              className="w-full rounded-full bg-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-pink-400"
+              disabled={loading}
+              className="w-full rounded-full bg-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-pink-400 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Registrarme
+              {loading ? "Registrando..." : "Registrarme"}
             </button>
 
-            {message ? (
-              <p className="rounded-3xl border border-pink-400/20 bg-pink-500/10 px-4 py-3 text-center text-sm text-pink-100">
+            {message && (
+              <p className={`rounded-3xl border px-4 py-3 text-center text-sm ${
+                messageType === "success"
+                  ? "border-green-400/20 bg-green-500/10 text-green-100"
+                  : "border-pink-400/20 bg-pink-500/10 text-pink-100"
+              }`}>
                 {message}
               </p>
-            ) : null}
+            )}
           </form>
 
           <p className="mt-8 text-center text-sm text-slate-400">
