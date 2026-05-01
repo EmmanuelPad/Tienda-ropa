@@ -1,8 +1,21 @@
 @import "tailwindcss";
 
 :root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --header-bg: rgba(17, 24, 39, 0.95);
+  --card-bg: rgba(31, 41, 55, 0.5);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --input-bg: rgba(17, 24, 39, 0.5);
+}
+
+.light {
   --background: #ffffff;
   --foreground: #171717;
+  --header-bg: rgba(255, 255, 255, 0.95);
+  --card-bg: rgba(249, 250, 251, 0.5);
+  --border-color: rgba(0, 0, 0, 0.1);
+  --input-bg: rgba(249, 250, 251, 0.5);
 }
 
 @theme inline {
@@ -12,15 +25,9 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }

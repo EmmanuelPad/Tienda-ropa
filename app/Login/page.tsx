@@ -36,7 +36,15 @@ function Login() {
       await configureAuthPersistence(rememberMe);
 
       // Iniciar sesión con correo y contraseña
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Obtener el ID token y enviarlo al servidor para crear la cookie de sesión
+      const idToken = await userCredential.user.getIdToken();
+      await fetch("/api/sessionLogin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken, remember: rememberMe }),
+      });
 
       setMessage("Inicio de sesión exitoso. Redirigiendo...");
       setMessageType("success");

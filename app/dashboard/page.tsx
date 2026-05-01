@@ -1,4 +1,6 @@
-﻿import PublicHeader from "@/components/layout/PublicHeader";
+﻿import AuthHeader from "@/components/layout/AuthHeader";
+import PublicHeader from "@/components/layout/PublicHeader";
+import { Auth } from "firebase-admin/auth";
 
 const productos = [
   {
