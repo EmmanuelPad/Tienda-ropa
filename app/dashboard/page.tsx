@@ -1,158 +1,129 @@
-﻿import AuthHeader from "@/components/layout/AuthHeader";
-import PublicHeader from "@/components/layout/PublicHeader";
-import { Auth } from "firebase-admin/auth";
+﻿import PublicHeader from "@/components/layout/PublicHeader";
+import Link from "next/link";
 
-const productos = [
-  {
-    id: 1,
-    nombre: "Camisa Casual Azul",
-    precio: 450,
-    categoria: "Hombre",
-    imagen: "👕",
-    descripcion: "Camisa de algodón perfecta para el día a día."
-  },
-  {
-    id: 2,
-    nombre: "Vestido Elegante Negro",
-    precio: 850,
-    categoria: "Mujer",
-    imagen: "👗",
-    descripcion: "Vestido versátil para ocasiones especiales."
-  },
-  {
-    id: 3,
-    nombre: "Jeans Clásicos",
-    precio: 650,
-    categoria: "Hombre",
-    imagen: "👖",
-    descripcion: "Jeans de corte recto, cómodos y duraderos."
-  },
-  {
-    id: 4,
-    nombre: "Blusa Blanca",
-    precio: 350,
-    categoria: "Mujer",
-    imagen: "👚",
-    descripcion: "Blusa básica de algodón, esencial en tu guardarropa."
-  },
-  {
-    id: 5,
-    nombre: "Chaqueta de Cuero",
-    precio: 1200,
-    categoria: "Hombre",
-    imagen: "🧥",
-    descripcion: "Chaqueta de cuero genuino con estilo vintage."
-  },
-  {
-    id: 6,
-    nombre: "Falda Plisada",
-    precio: 550,
-    categoria: "Mujer",
-    imagen: "👗",
-    descripcion: "Falda plisada elegante para looks modernos."
-  },
-  {
-    id: 7,
-    nombre: "Sudadera Oversize",
-    precio: 480,
-    categoria: "Unisex",
-    imagen: "👕",
-    descripcion: "Sudadera cómoda para días casuales."
-  },
-  {
-    id: 8,
-    nombre: "Zapatos Deportivos",
-    precio: 750,
-    categoria: "Unisex",
-    imagen: "👟",
-    descripcion: "Zapatillas cómodas para actividades diarias."
-  }
-];
-
-function Productos() {
+export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-slate-950 text-white">
       <PublicHeader />
 
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mb-12 text-center">
-          <p className="text-sm uppercase tracking-[0.35em] text-pink-300">Nuestra colección</p>
-          <h1 className="mt-4 text-4xl font-bold text-white sm:text-5xl">Productos</h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-300">
-            Descubre prendas de calidad con estilo único. Cada pieza está seleccionada para ofrecerte comodidad y tendencia.
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-12">
+          <p className="text-sm font-medium text-emerald-400">Bienvenido al</p>
+          <h1 className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl">
+            Panel de Administración
+          </h1>
+          <p className="mt-4 text-lg text-slate-400">
+            Gestiona tu tienda de ropa desde aquí
           </p>
         </div>
 
-        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap gap-2">
-            <button className="rounded-full border border-pink-400/30 bg-pink-500/10 px-4 py-2 text-sm text-pink-100 transition hover:bg-pink-500/20">
-              Todos
-            </button>
-            <button className="rounded-full border border-slate-700 bg-slate-800/50 px-4 py-2 text-sm text-slate-300 transition hover:border-pink-400/30 hover:bg-pink-500/10 hover:text-pink-100">
-              Mujer
-            </button>
-            <button className="rounded-full border border-slate-700 bg-slate-800/50 px-4 py-2 text-sm text-slate-300 transition hover:border-pink-400/30 hover:bg-pink-500/10 hover:text-pink-100">
-              Hombre
-            </button>
-            <button className="rounded-full border border-slate-700 bg-slate-800/50 px-4 py-2 text-sm text-slate-300 transition hover:border-pink-400/30 hover:bg-pink-500/10 hover:text-pink-100">
-              Unisex
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-slate-300">Ordenar por:</label>
-            <select className="rounded-3xl border border-slate-700 bg-slate-900/90 px-3 py-2 text-sm text-white outline-none focus:border-pink-400">
-              <option>Precio: Menor a mayor</option>
-              <option>Precio: Mayor a menor</option>
-              <option>Nombre A-Z</option>
-              <option>Novedades</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {productos.map((producto) => (
-            <div
-              key={producto.id}
-              className="group overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-500/10"
-            >
-              <div className="aspect-square bg-slate-800/50 p-8 text-center text-6xl">
-                {producto.imagen}
+        {/* Main Action Buttons */}
+        <div className="mb-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Crear Producto Button */}
+          <Link
+            href="/dashboard/productos/nuevo"
+            className="group relative overflow-hidden rounded-2xl border border-emerald-400/30 bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 p-8 transition hover:border-emerald-400/60 hover:shadow-lg hover:shadow-emerald-500/20"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/0 via-emerald-500/0 to-emerald-500/0 group-hover:via-emerald-500/10 transition" />
+            <div className="relative">
+              <div className="mb-4 inline-block rounded-lg bg-emerald-500/20 p-3 text-3xl">
+                ➕
               </div>
-
-              <div className="p-6">
-                <div className="mb-2">
-                  <span className="inline-block rounded-full bg-pink-500/20 px-2 py-1 text-xs font-medium text-pink-300">
-                    {producto.categoria}
-                  </span>
-                </div>
-
-                <h3 className="mb-2 text-lg font-semibold text-white">{producto.nombre}</h3>
-                <p className="mb-4 text-sm text-slate-400">{producto.descripcion}</p>
-
-                <div className="flex items-center justify-between">
-                  <span className="text-xl font-bold text-pink-300"></span>
-                  <button className="rounded-full bg-pink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-400">
-                    Agregar
-                  </button>
-                </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Crear Producto</h3>
+              <p className="text-sm text-slate-400">
+                Agrega nuevas prendas a tu catálogo
+              </p>
+              <div className="mt-4 inline-flex items-center text-sm font-semibold text-emerald-400 group-hover:text-emerald-300">
+                Crear producto →
               </div>
             </div>
-          ))}
+          </Link>
+
+          {/* Ver Productos Button */}
+          <Link
+            href="/dashboard/productos"
+            className="group relative overflow-hidden rounded-2xl border border-blue-400/30 bg-gradient-to-br from-blue-500/10 to-blue-600/5 p-8 transition hover:border-blue-400/60 hover:shadow-lg hover:shadow-blue-500/20"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:via-blue-500/10 transition" />
+            <div className="relative">
+              <div className="mb-4 inline-block rounded-lg bg-blue-500/20 p-3 text-3xl">
+                📦
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Productos</h3>
+              <p className="text-sm text-slate-400">
+                Gestiona todos tus productos
+              </p>
+              <div className="mt-4 inline-flex items-center text-sm font-semibold text-blue-400 group-hover:text-blue-300">
+                Ver productos →
+              </div>
+            </div>
+          </Link>
+
+          {/* Configuración Button */}
+          <Link
+            href="/dashboard/configuracion"
+            className="group relative overflow-hidden rounded-2xl border border-purple-400/30 bg-gradient-to-br from-purple-500/10 to-purple-600/5 p-8 transition hover:border-purple-400/60 hover:shadow-lg hover:shadow-purple-500/20"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/0 to-purple-500/0 group-hover:via-purple-500/10 transition" />
+            <div className="relative">
+              <div className="mb-4 inline-block rounded-lg bg-purple-500/20 p-3 text-3xl">
+                ⚙️
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Configuración</h3>
+              <p className="text-sm text-slate-400">
+                Ajusta los parámetros de tu tienda
+              </p>
+              <div className="mt-4 inline-flex items-center text-sm font-semibold text-purple-400 group-hover:text-purple-300">
+                Configurar →
+              </div>
+            </div>
+          </Link>
         </div>
 
-        <div className="mt-16 text-center">
-          <p className="text-slate-400">¿No encuentras lo que buscas?</p>
-          <a
-            href="#contacto"
-            className="mt-2 inline-block text-pink-300 transition hover:text-pink-200"
-          >
-            Contáctanos para sugerencias personalizadas →
-          </a>
+        {/* Quick Stats */}
+        <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8">
+          <h2 className="mb-6 text-xl font-bold text-white">Resumen Rápido</h2>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-lg border border-slate-700/50 bg-slate-800/30 p-4">
+              <p className="text-sm text-slate-400">Total Productos</p>
+              <p className="mt-2 text-3xl font-bold text-emerald-400">-</p>
+            </div>
+            <div className="rounded-lg border border-slate-700/50 bg-slate-800/30 p-4">
+              <p className="text-sm text-slate-400">Stock Total</p>
+              <p className="mt-2 text-3xl font-bold text-blue-400">-</p>
+            </div>
+            <div className="rounded-lg border border-slate-700/50 bg-slate-800/30 p-4">
+              <p className="text-sm text-slate-400">Categorías</p>
+              <p className="mt-2 text-3xl font-bold text-purple-400">-</p>
+            </div>
+            <div className="rounded-lg border border-slate-700/50 bg-slate-800/30 p-4">
+              <p className="text-sm text-slate-400">Ventas Hoy</p>
+              <p className="mt-2 text-3xl font-bold text-pink-400">$0</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Info Section */}
+        <div className="mt-12 rounded-2xl border border-slate-800/50 bg-gradient-to-r from-slate-900/50 to-slate-800/30 p-8">
+          <h3 className="mb-4 text-lg font-semibold text-white">📌 Próximos pasos</h3>
+          <ul className="space-y-3 text-slate-300">
+            <li className="flex items-start gap-3">
+              <span className="mt-1 inline-block h-2 w-2 rounded-full bg-emerald-400" />
+              <span>Crea tu primer producto usando el botón Crear Producto</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1 inline-block h-2 w-2 rounded-full bg-emerald-400" />
+              <span>Organiza tus productos por categoría</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="mt-1 inline-block h-2 w-2 rounded-full bg-emerald-400" />
+              <span>Configura tu tienda desde el menú de Configuración</span>
+            </li>
+          </ul>
         </div>
       </div>
     </main>
   );
 }
 
-export default Productos;

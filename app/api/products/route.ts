@@ -112,12 +112,14 @@ export async function POST(request: NextRequest) {
     } catch (error) 
     {
         console.error("Error creating product:", error);
+        console.error("Error details:", JSON.stringify(error, null, 2));
 
         return NextResponse.json
         (
             { 
                 ok: false,
-                error: "No se pudo crear el producto" 
+                error: error instanceof Error ? error.message : "No se pudo crear el producto",
+                details: error instanceof Error ? error.stack : "Error desconocido"
             }, 
             {
                  status: 500 
