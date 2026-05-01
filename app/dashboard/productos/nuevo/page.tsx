@@ -1,9 +1,11 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
+import { useRequireRole } from "@/lib/useRequireRole";
+import AdminHeader from "@/components/layout/AdminHeader";
 
 export default function NuevoProductoPage() {
-  
+  const { loading, isAdmin, user } = useRequireRole("admin");
   const router = useRouter();
 
   const [isSaving, setIsSaving] = useState(false);
@@ -53,9 +55,21 @@ export default function NuevoProductoPage() {
   }
 
 
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-slate-950 text-white">
+        <AdminHeader user={user} />
+        <div className="flex items-center justify-center py-20">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></div>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-8 text-white">
-      <section className="mx-auto max-w-3xl">
+    <main className="min-h-screen bg-slate-950 text-white">
+      <AdminHeader user={user} />
+      <section className="mx-auto max-w-3xl px-6 py-8">
         <div className="mb-8">
           <p className="text-sm font-medium text-emerald-400">
             Productos

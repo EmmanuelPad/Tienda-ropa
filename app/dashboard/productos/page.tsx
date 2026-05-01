@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRequireRole } from "@/lib/useRequireRole";
+import { auth } from "@/lib/firebase-client";
 import Link from "next/link";
+import AdminHeader from "@/components/layout/AdminHeader";
 
 interface Product {
   id: string;
@@ -12,13 +15,14 @@ interface Product {
 }
 
 export default function AdminProductosPage() {
+  const { loading: roleLoading, isAdmin, user } = useRequireRole("admin");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    if (!roleLoading && isAdmin) fetchProducts();
+  }, [roleLoading, isAdmin]);
 
   async function fetchProducts() {
     try {
@@ -51,9 +55,10 @@ export default function AdminProductosPage() {
     }
   }
 
-  if (loading) {
+  if (roleLoading || loading) {
     return (
-      <main className="min-h-screen bg-slate-950 px-6 py-8 text-white">
+      <main className="min-h-screen bg-slate-950 text-white">
+        <AdminHeader user={user} />
         <div className="flex items-center justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></div>
         </div>
@@ -62,8 +67,9 @@ export default function AdminProductosPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 px-6 py-8 text-white">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-slate-950 text-white">
+      <AdminHeader user={user} />
+      <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-emerald-400">Administración</p>

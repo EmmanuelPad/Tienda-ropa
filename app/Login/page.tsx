@@ -11,6 +11,7 @@ import { useState } from "react";
 
 
 function Login() {
+  // Estados para manejar el formulario, mensajes y carga
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -18,7 +19,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
-
+// Función para manejar el envío del formulario de login
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
@@ -52,7 +53,7 @@ function Login() {
       // Redirigir después de 2 segundos
       setTimeout(() => {
         router.push("/");
-      }, 2000);
+      }, 200);
     } catch (error: any) {
       console.error("Error en login:", error);
       

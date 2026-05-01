@@ -20,7 +20,7 @@ export async function verifyIdToken(idToken: string): Promise<{ uid: string; ema
     throw new Error("Invalid token");
   }
 }
-
+// Obtiene el usuario autenticado en el servidor (usado en getServerSideProps o API routes)
 export async function getServerUser(): Promise<User | null> {
   const token = (await cookies()).get(COOKIE)?.value;
   if (!token) return null;

@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { useTheme } from "next-themes";
 import PublicHeader from "@/components/layout/PublicHeader";
-import Link from "next/link";
 
 type Seccion = "cuenta" | "apariencia" | "notificaciones" | "privacidad" | "avanzado";
 
@@ -37,7 +37,7 @@ const menuItems: MenuItem[] = [
     label: "Notificaciones",
     icono: (
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.352 2.352 0 0119 13.341V12a3 3 0 00-3-3H9a3 3 0 00-3 3v1.341c0 .629.282 1.223.814 1.654L5 17h5m0 0a2 2 0 100-4 2 2 0 000 4z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.352 2.352 0 0119 14V12a3 3 0 00-3-3H9a3 3 0 00-3 3v2c0 .563-.282 1.063-.595 1.405L4 17h5m0 0a2 2 0 104 0m-4 0h4" />
       </svg>
     ),
   },
@@ -64,73 +64,65 @@ const menuItems: MenuItem[] = [
 
 export default function ConfiguracionPage() {
   const { user } = useAuth();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const [seccionActiva, setSeccionActiva] = useState<Seccion>("cuenta");
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
   const [nombre, setNombre] = useState("");
   const [username, setUsername] = useState("");
   const [telefono, setTelefono] = useState("");
   const [direccion, setDireccion] = useState("");
   const [guardando, setGuardando] = useState(false);
+  const [guardado, setGuardado] = useState(false);
   const [notificaciones, setNotificaciones] = useState({
     email: true,
     pedidos: true,
     promociones: false,
   });
 
-  // Colores dinámicos según el tema
-  const colors = {
-    bg: theme === "dark" ? "bg-gray-950" : "bg-gray-50",
-    text: theme === "dark" ? "text-white" : "text-gray-900",
-    textSecondary: theme === "dark" ? "text-gray-400" : "text-gray-600",
-    card: theme === "dark" ? "bg-gray-800/50" : "bg-white",
-    cardItem: theme === "dark" ? "bg-gray-800/30" : "bg-gray-100",
-    border: theme === "dark" ? "border-white/10" : "border-gray-200",
-    inputBg: theme === "dark" ? "bg-gray-900/50" : "bg-white",
-    buttonBg: theme === "dark" ? "bg-white/5" : "bg-gray-100",
-    buttonBorder: theme === "dark" ? "border-white/20" : "border-gray-300",
-    activeBg: theme === "dark" ? "bg-pink-500/20" : "bg-pink-100",
-    activeText: theme === "dark" ? "text-pink-400" : "text-pink-600",
-    hoverBg: theme === "dark" ? "hover:bg-white/5" : "hover:bg-gray-200",
-    dangerBg: theme === "dark" ? "bg-red-500/10" : "bg-red-50",
-    dangerBorder: theme === "dark" ? "border-red-500/30" : "border-red-200",
-  };
-
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
-    const savedUsername = localStorage.getItem("username") as string | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
-    if (savedUsername) {
-      setUsername(savedUsername);
-    }
+    setMounted(true);
+    // Cargar username guardado (solo este dato, el tema lo maneja next-themes)
+    const savedUsername = localStorage.getItem("username");
+    if (savedUsername) setUsername(savedUsername);
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = theme === "dark" ? "light" : "dark";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.classList.remove("light", "dark");
-    document.documentElement.classList.add(newTheme);
+  if (!mounted) return null;
+
+  const isDark = resolvedTheme === "dark";
+
+  // Clases dinámicas centralizadas usando dark: de Tailwind
+  const c = {
+    bg:           isDark ? "bg-gray-950"      : "bg-gray-50",
+    text:         isDark ? "text-white"        : "text-gray-900",
+    textSec:      isDark ? "text-gray-400"     : "text-gray-600",
+    card:         isDark ? "bg-gray-800/50"    : "bg-white",
+    cardItem:     isDark ? "bg-gray-800/30"    : "bg-gray-100",
+    border:       isDark ? "border-white/10"   : "border-gray-200",
+    inputBg:      isDark ? "bg-gray-900/50"    : "bg-white",
+    activeBg:     isDark ? "bg-pink-500/20"    : "bg-pink-100",
+    activeText:   isDark ? "text-pink-400"     : "text-pink-600",
+    hoverBg:      isDark ? "hover:bg-white/5"  : "hover:bg-gray-200",
+    dangerBg:     isDark ? "bg-red-500/10"     : "bg-red-50",
+    dangerBorder: isDark ? "border-red-500/30" : "border-red-200",
   };
+
+  const inputClass = `mt-1 w-full rounded-lg border ${c.border} ${c.inputBg} px-4 py-2 ${c.text} focus:border-pink-500 focus:outline-none`;
 
   const handleGuardar = async () => {
     setGuardando(true);
-    // Guardar username en localStorage
-    if (username) {
-      localStorage.setItem("username", username);
-    }
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    if (username) localStorage.setItem("username", username);
+    await new Promise((r) => setTimeout(r, 800));
     setGuardando(false);
-    alert("Configuración guardada");
+    setGuardado(true);
+    setTimeout(() => setGuardado(false), 3000);
   };
 
   if (!user) {
     return (
-      <div className={`min-h-screen ${colors.bg} transition-colors duration-300`}>
+      <div className={`min-h-screen ${c.bg} transition-colors duration-300`}>
         <PublicHeader />
         <div className="flex items-center justify-center py-20">
-          <p className={colors.text}>Debes iniciar sesión para ver esta página</p>
+          <p className={c.text}>Debes iniciar sesión para ver esta página.</p>
         </div>
       </div>
     );
@@ -141,58 +133,27 @@ export default function ConfiguracionPage() {
       case "cuenta":
         return (
           <div className="space-y-6">
-            <div>
-              <h2 className={`mb-4 text-xl font-semibold ${colors.text}`}>Información de la cuenta</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className={`block text-sm ${colors.textSecondary}`}>Nombre de usuario</label>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="@tuusername"
-                    className={`mt-1 w-full rounded-lg border ${colors.border} ${colors.inputBg} px-4 py-2 ${colors.text} focus:border-pink-500 focus:outline-none`}
-                  />
-                </div>
-                <div>
-                  <label className={`block text-sm ${colors.textSecondary}`}>Email</label>
-                  <input
-                    type="email"
-                    value={user.email || ""}
-                    disabled
-                    className={`mt-1 w-full rounded-lg border ${colors.border} ${colors.inputBg} px-4 py-2 ${colors.text} opacity-60`}
-                  />
-                </div>
-                <div>
-                  <label className={`block text-sm ${colors.textSecondary}`}>Nombre</label>
-                  <input
-                    type="text"
-                    value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
-                    placeholder="Tu nombre"
-                    className={`mt-1 w-full rounded-lg border ${colors.border} ${colors.inputBg} px-4 py-2 ${colors.text} focus:border-pink-500 focus:outline-none`}
-                  />
-                </div>
-                <div>
-                  <label className={`block text-sm ${colors.textSecondary}`}>Teléfono</label>
-                  <input
-                    type="tel"
-                    value={telefono}
-                    onChange={(e) => setTelefono(e.target.value)}
-                    placeholder="Tu teléfono"
-                    className={`mt-1 w-full rounded-lg border ${colors.border} ${colors.inputBg} px-4 py-2 ${colors.text} focus:border-pink-500 focus:outline-none`}
-                  />
-                </div>
-                <div>
-                  <label className={`block text-sm ${colors.textSecondary}`}>Dirección</label>
-                  <textarea
-                    value={direccion}
-                    onChange={(e) => setDireccion(e.target.value)}
-                    placeholder="Tu dirección"
-                    rows={3}
-                    className={`mt-1 w-full rounded-lg border ${colors.border} ${colors.inputBg} px-4 py-2 ${colors.text} focus:border-pink-500 focus:outline-none`}
-                  />
-                </div>
+            <h2 className={`text-xl font-semibold ${c.text}`}>Información de la cuenta</h2>
+            <div className="space-y-4">
+              <div>
+                <label className={`block text-sm ${c.textSec}`}>Nombre de usuario</label>
+                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="@tuusername" className={inputClass} />
+              </div>
+              <div>
+                <label className={`block text-sm ${c.textSec}`}>Email</label>
+                <input type="email" value={user.email || ""} disabled className={`${inputClass} opacity-60`} />
+              </div>
+              <div>
+                <label className={`block text-sm ${c.textSec}`}>Nombre</label>
+                <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Tu nombre" className={inputClass} />
+              </div>
+              <div>
+                <label className={`block text-sm ${c.textSec}`}>Teléfono</label>
+                <input type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} placeholder="Tu teléfono" className={inputClass} />
+              </div>
+              <div>
+                <label className={`block text-sm ${c.textSec}`}>Dirección</label>
+                <textarea value={direccion} onChange={(e) => setDireccion(e.target.value)} placeholder="Tu dirección" rows={3} className={inputClass} />
               </div>
             </div>
             <button
@@ -200,7 +161,7 @@ export default function ConfiguracionPage() {
               disabled={guardando}
               className="w-full rounded-lg bg-pink-500 py-3 font-semibold text-white transition hover:bg-pink-400 disabled:opacity-50"
             >
-              {guardando ? "Guardando..." : "Guardar cambios"}
+              {guardando ? "Guardando..." : guardado ? "¡Guardado!" : "Guardar cambios"}
             </button>
           </div>
         );
@@ -208,37 +169,26 @@ export default function ConfiguracionPage() {
       case "apariencia":
         return (
           <div className="space-y-6">
-            <div>
-              <h2 className={`mb-4 text-xl font-semibold ${colors.text}`}>Apariencia</h2>
-              <div className={`rounded-lg border ${colors.border} ${colors.cardItem} p-4`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className={`${colors.text} font-medium`}>Tema de la aplicación</p>
-                    <p className={`text-sm ${colors.textSecondary}`}>
-                      {theme === "dark" ? "Modo oscuro" : "Modo claro"}
-                    </p>
-                  </div>
-                  <button
-                    onClick={toggleTheme}
-                    className={`flex items-center gap-2 rounded-lg border ${colors.buttonBorder} ${colors.buttonBg} px-4 py-2 ${colors.text} transition hover:border-pink-300`}
-                  >
-                    {theme === "dark" ? (
-                      <>
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        <span>Modo claro</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                        </svg>
-                        <span>Modo oscuro</span>
-                      </>
-                    )}
-                  </button>
+            <h2 className={`text-xl font-semibold ${c.text}`}>Apariencia</h2>
+            <div className={`rounded-lg border ${c.border} ${c.cardItem} p-4`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`font-medium ${c.text}`}>Tema de la aplicación</p>
+                  <p className={`text-sm ${c.textSec}`}>{isDark ? "Modo oscuro activo" : "Modo claro activo"}</p>
                 </div>
+                <button
+                  onClick={() => setTheme(isDark ? "light" : "dark")}
+                  className={`flex items-center gap-2 rounded-lg border ${c.border} px-4 py-2 ${c.text} transition hover:border-pink-300`}
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {isDark ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    )}
+                  </svg>
+                  {isDark ? "Cambiar a claro" : "Cambiar a oscuro"}
+                </button>
               </div>
             </div>
           </div>
@@ -247,51 +197,28 @@ export default function ConfiguracionPage() {
       case "notificaciones":
         return (
           <div className="space-y-6">
-            <div>
-              <h2 className={`mb-4 text-xl font-semibold ${colors.text}`}>Notificaciones</h2>
-              <div className="space-y-3">
-                <label className={`flex cursor-pointer items-center justify-between rounded-lg border ${colors.border} ${colors.cardItem} p-4`}>
+            <h2 className={`text-xl font-semibold ${c.text}`}>Notificaciones</h2>
+            <div className="space-y-3">
+              {[
+                { key: "email" as const, label: "Notificaciones por email", desc: "Recibe actualizaciones en tu correo" },
+                { key: "pedidos" as const, label: "Estado de pedidos", desc: "Notificaciones sobre tus pedidos" },
+                { key: "promociones" as const, label: "Promociones y ofertas", desc: "Recibe ofertas especiales" },
+              ].map(({ key, label, desc }) => (
+                <label key={key} className={`flex cursor-pointer items-center justify-between rounded-lg border ${c.border} ${c.cardItem} p-4`}>
                   <div>
-                    <p className={`${colors.text} font-medium`}>Notificaciones por email</p>
-                    <p className={`text-sm ${colors.textSecondary}`}>Recibe actualizaciones en tu correo</p>
+                    <p className={`font-medium ${c.text}`}>{label}</p>
+                    <p className={`text-sm ${c.textSec}`}>{desc}</p>
                   </div>
                   <input
                     type="checkbox"
-                    checked={notificaciones.email}
-                    onChange={(e) => setNotificaciones({ ...notificaciones, email: e.target.checked })}
+                    checked={notificaciones[key]}
+                    onChange={(e) => setNotificaciones({ ...notificaciones, [key]: e.target.checked })}
                     className="h-5 w-5 accent-pink-500"
                   />
                 </label>
-                <label className={`flex cursor-pointer items-center justify-between rounded-lg border ${colors.border} ${colors.cardItem} p-4`}>
-                  <div>
-                    <p className={`${colors.text} font-medium`}>Estado de pedidos</p>
-                    <p className={`text-sm ${colors.textSecondary}`}>Notificaciones sobre tus pedidos</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notificaciones.pedidos}
-                    onChange={(e) => setNotificaciones({ ...notificaciones, pedidos: e.target.checked })}
-                    className="h-5 w-5 accent-pink-500"
-                  />
-                </label>
-                <label className={`flex cursor-pointer items-center justify-between rounded-lg border ${colors.border} ${colors.cardItem} p-4`}>
-                  <div>
-                    <p className={`${colors.text} font-medium`}>Promociones y ofertas</p>
-                    <p className={`text-sm ${colors.textSecondary}`}>Recibe ofertas especiales</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={notificaciones.promociones}
-                    onChange={(e) => setNotificaciones({ ...notificaciones, promociones: e.target.checked })}
-                    className="h-5 w-5 accent-pink-500"
-                  />
-                </label>
-              </div>
+              ))}
             </div>
-            <button
-              onClick={handleGuardar}
-              className="w-full rounded-lg bg-pink-500 py-3 font-semibold text-white transition hover:bg-pink-400"
-            >
+            <button onClick={handleGuardar} className="w-full rounded-lg bg-pink-500 py-3 font-semibold text-white transition hover:bg-pink-400">
               Guardar preferencias
             </button>
           </div>
@@ -300,28 +227,18 @@ export default function ConfiguracionPage() {
       case "privacidad":
         return (
           <div className="space-y-6">
-            <div>
-              <h2 className={`mb-4 text-xl font-semibold ${colors.text}`}>Privacidad</h2>
-              <div className="space-y-4">
-                <div className={`rounded-lg border ${colors.border} ${colors.cardItem} p-4`}>
-                  <p className={`${colors.text} font-medium`}>Datos personales</p>
-                  <p className={`mt-1 text-sm ${colors.textSecondary}`}>
-                    Tus datos están almacenados de forma segura. Puedes solicitar la eliminación de tu cuenta.
-                  </p>
-                  <button className={`mt-3 text-sm ${colors.activeText} hover:opacity-80`}>
-                    Solicitar eliminación de datos
-                  </button>
+            <h2 className={`text-xl font-semibold ${c.text}`}>Privacidad</h2>
+            <div className="space-y-4">
+              {[
+                { titulo: "Datos personales", desc: "Tus datos están almacenados de forma segura. Puedes solicitar la eliminación de tu cuenta.", accion: "Solicitar eliminación de datos" },
+                { titulo: "Historial de actividad", desc: "Controla qué información se guarda sobre tu actividad en la plataforma.", accion: "Ver historial de actividad" },
+              ].map(({ titulo, desc, accion }) => (
+                <div key={titulo} className={`rounded-lg border ${c.border} ${c.cardItem} p-4`}>
+                  <p className={`font-medium ${c.text}`}>{titulo}</p>
+                  <p className={`mt-1 text-sm ${c.textSec}`}>{desc}</p>
+                  <button className={`mt-3 text-sm ${c.activeText} hover:opacity-80`}>{accion}</button>
                 </div>
-                <div className={`rounded-lg border ${colors.border} ${colors.cardItem} p-4`}>
-                  <p className={`${colors.text} font-medium`}>Historial de actividad</p>
-                  <p className={`mt-1 text-sm ${colors.textSecondary}`}>
-                    Controla qué información se guarda sobre tu actividad en la plataforma.
-                  </p>
-                  <button className={`mt-3 text-sm ${colors.activeText} hover:opacity-80`}>
-                    Ver historial de actividad
-                  </button>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         );
@@ -329,36 +246,24 @@ export default function ConfiguracionPage() {
       case "avanzado":
         return (
           <div className="space-y-6">
-            <div>
-              <h2 className={`mb-4 text-xl font-semibold ${colors.text}`}>Configuración avanzada</h2>
-              <div className="space-y-4">
-                <div className={`rounded-lg border ${colors.border} ${colors.cardItem} p-4`}>
-                  <p className={`${colors.text} font-medium`}>Sesiones activas</p>
-                  <p className={`mt-1 text-sm ${colors.textSecondary}`}>
-                    Gestiona los dispositivos donde tienes sesión iniciada.
-                  </p>
-                  <button className={`mt-3 text-sm ${colors.activeText} hover:opacity-80`}>
-                    Ver sesiones
-                  </button>
+            <h2 className={`text-xl font-semibold ${c.text}`}>Configuración avanzada</h2>
+            <div className="space-y-4">
+              {[
+                { titulo: "Sesiones activas", desc: "Gestiona los dispositivos donde tienes sesión iniciada.", accion: "Ver sesiones" },
+                { titulo: "Cambiar contraseña", desc: "Actualiza tu contraseña de acceso.", accion: "Cambiar contraseña" },
+              ].map(({ titulo, desc, accion }) => (
+                <div key={titulo} className={`rounded-lg border ${c.border} ${c.cardItem} p-4`}>
+                  <p className={`font-medium ${c.text}`}>{titulo}</p>
+                  <p className={`mt-1 text-sm ${c.textSec}`}>{desc}</p>
+                  <button className={`mt-3 text-sm ${c.activeText} hover:opacity-80`}>{accion}</button>
                 </div>
-                <div className={`rounded-lg border ${colors.border} ${colors.cardItem} p-4`}>
-                  <p className={`${colors.text} font-medium`}>Cambiar contraseña</p>
-                  <p className={`mt-1 text-sm ${colors.textSecondary}`}>
-                    Actualiza tu contraseña de acceso.
-                  </p>
-                  <button className={`mt-3 text-sm ${colors.activeText} hover:opacity-80`}>
-                    Cambiar contraseña
-                  </button>
-                </div>
-                <div className={`rounded-lg border ${colors.dangerBorder} ${colors.dangerBg} p-4`}>
-                  <p className="text-red-500 font-medium">Zona de peligro</p>
-                  <p className={`mt-1 text-sm ${colors.textSecondary}`}>
-                    Esta acción es irreversible. Perderás todos tus datos.
-                  </p>
-                  <button className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-500">
-                    Eliminar cuenta
-                  </button>
-                </div>
+              ))}
+              <div className={`rounded-lg border ${c.dangerBorder} ${c.dangerBg} p-4`}>
+                <p className="font-medium text-red-500">Zona de peligro</p>
+                <p className={`mt-1 text-sm ${c.textSec}`}>Esta acción es irreversible. Perderás todos tus datos.</p>
+                <button className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-500">
+                  Eliminar cuenta
+                </button>
               </div>
             </div>
           </div>
@@ -367,13 +272,13 @@ export default function ConfiguracionPage() {
   };
 
   return (
-    <div className={`min-h-screen ${colors.bg} transition-colors duration-300`}>
+    <div className={`min-h-screen ${c.bg} transition-colors duration-300`}>
       <PublicHeader />
       <div className="mx-auto max-w-6xl px-4 py-8">
-        <h1 className={`mb-8 text-3xl font-bold ${colors.text}`}>Configuración</h1>
-        
+        <h1 className={`mb-8 text-3xl font-bold ${c.text}`}>Configuración</h1>
+
         <div className="flex gap-6">
-          {/* Menú lateral estilo YouTube */}
+          {/* Menú lateral */}
           <nav className="w-64 flex-shrink-0">
             <div className="sticky top-24 space-y-1">
               {menuItems.map((item) => (
@@ -382,8 +287,8 @@ export default function ConfiguracionPage() {
                   onClick={() => setSeccionActiva(item.id)}
                   className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition ${
                     seccionActiva === item.id
-                      ? `${colors.activeBg} ${colors.activeText}`
-                      : `${colors.textSecondary} ${colors.hoverBg} ${colors.text}`
+                      ? `${c.activeBg} ${c.activeText}`
+                      : `${c.textSec} ${c.hoverBg}`
                   }`}
                 >
                   {item.icono}
@@ -393,8 +298,8 @@ export default function ConfiguracionPage() {
             </div>
           </nav>
 
-          {/* Contenido principal */}
-          <main className={`flex-1 rounded-lg border ${colors.border} ${colors.card} p-6`}>
+          {/* Contenido */}
+          <main className={`flex-1 rounded-lg border ${c.border} ${c.card} p-6`}>
             {renderContenido()}
           </main>
         </div>

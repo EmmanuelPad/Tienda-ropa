@@ -18,17 +18,18 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   isAdmin: false,
 });
-
+//
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
-  // Fetch user role from server
+  // Función para obtener el rol del usuario desde el backend
   const fetchUserRole = async (uid: string) => {
+    
     try {
-      const res = await fetch(`/api/user/role?uid=${uid}`);
+      const res = await fetch(`/api/user/route.ts?uid=${uid}`);
       if (res.ok) {
         const data = await res.json();
         setIsAdmin(data.role === 'admin');
