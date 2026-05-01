@@ -57,12 +57,11 @@ function Signup()
         displayName: name,
       });
 
-      // Guardar usuario en Firestore con rol "user" por defecto
+      // Guardar usuario en Firestore
       await setDoc(doc(firestore, "users", userCredential.user.uid), {
         uid: userCredential.user.uid,
         email: email,
         displayName: name,
-        role: "user",  // Rol por defecto
         createdAt: new Date().toISOString(),
       });
 
