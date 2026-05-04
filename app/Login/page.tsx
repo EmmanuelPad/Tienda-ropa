@@ -1,74 +1,56 @@
 "use client";
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import PublicHeader from "@/components/layout/PublicHeader";
 import { auth, configureAuthPersistence } from "@/lib/firebase-client";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { useRouter } from "next/navigation";
-
-import React from "react";
-
-import { useState } from "react";
-
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState<"success" | "error" | "">("");
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setLoading(true);
-    setMessage("");
 
     if (!email || !password) {
       setMessage("Por favor completa todos los campos.");
-      setMessageType("error");
-      setLoading(false);
       return;
     }
 
+    setLoading(true);
+    setMessage("");
+
     try {
-      // Configurar persistencia según el checkbox
+      // Configurar persistencia antes de iniciar sesión
       await configureAuthPersistence(rememberMe);
-
-      // Iniciar sesión con correo y contraseña
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      // Obtener el ID token y enviarlo al servidor para crear la cookie de sesión
-      const idToken = await userCredential.user.getIdToken();
-      await fetch("/api/sessionLogin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken, remember: rememberMe }),
-      });
-
-      setMessage("Inicio de sesión exitoso. Redirigiendo...");
-      setMessageType("success");
-
-      // Redirigir después de 2 segundos
+      // Iniciar sesión con Firebase
+      await signInWithEmailAndPassword(auth, email, password);
+      setMessage("Sesión iniciada correctamente. Redirigiendo...");
+      
+      // Redirigir al perfil o home después de 1.5 segundos
       setTimeout(() => {
-        router.push("/");
-      }, 2000);
-    } catch (error: any) {
-      console.error("Error en login:", error);
+        router.push("/profile");
+      }, 1500);
+    } catch (error) {
+      const err = error as { code?: string; message?: string };
+      let errorMessage = "Error al iniciar sesión.";
       
-      // Mensajes de error específicos
-      if (error.code === "auth/user-not-found") {
-        setMessage("Este correo no está registrado.");
-      } else if (error.code === "auth/wrong-password") {
-        setMessage("Contraseña incorrecta.");
-      } else if (error.code === "auth/invalid-email") {
-        setMessage("El correo no es válido.");
-      } else if (error.code === "auth/user-disabled") {
-        setMessage("Esta cuenta ha sido deshabilitada.");
-      } else {
-        setMessage("Error en el inicio de sesión: " + (error.message || "Intenta de nuevo"));
+      if (err.code === "auth/user-not-found") {
+        errorMessage = "El usuario no existe.";
+      } else if (err.code === "auth/wrong-password") {
+        errorMessage = "La contraseña es incorrecta.";
+      } else if (err.code === "auth/invalid-email") {
+        errorMessage = "El correo no es válido.";
+      } else if (err.code === "auth/user-disabled") {
+        errorMessage = "La cuenta ha sido deshabilitada.";
       }
-      setMessageType("error");
+      
+      setMessage(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -118,7 +100,7 @@ function Login() {
                 <input
                   type="checkbox"
                   checked={rememberMe}
-                  onChange={(event) => setRememberMe(event.target.checked)}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-pink-500 focus:ring-pink-400"
                 />
                 Recuérdame
@@ -133,18 +115,14 @@ function Login() {
               disabled={loading}
               className="w-full rounded-full bg-pink-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-pink-400 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Iniciando sesión..." : "Entrar"}
+              {loading ? "Cargando..." : "Entrar"}
             </button>
 
-            {message && (
-              <p className={`rounded-3xl border px-4 py-3 text-center text-sm ${
-                messageType === "success"
-                  ? "border-green-400/20 bg-green-500/10 text-green-100"
-                  : "border-pink-400/20 bg-pink-500/10 text-pink-100"
-              }`}>
+            {message ? (
+              <p className="rounded-3xl border border-pink-400/20 bg-pink-500/10 px-4 py-3 text-center text-sm text-pink-100">
                 {message}
               </p>
-            )}
+            ) : null}
           </form>
 
           <p className="mt-8 text-center text-sm text-slate-400">
