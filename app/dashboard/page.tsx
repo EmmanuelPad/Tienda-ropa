@@ -178,7 +178,7 @@ function Productos() {
           {productos.map((producto) => (
             <div
               key={producto.id}
-              className="group overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-500/10"
+              className="group overflow-hidden rounded-4xl border border-white/10 bg-white/5 shadow-sm transition hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-500/10"
             >
               <div className="aspect-square bg-slate-800/50 p-8 text-center text-6xl">
                 {producto.imagen}

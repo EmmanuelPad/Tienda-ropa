@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import PublicHeader from "@/components/layout/PublicHeader";
 import Image from "next/image";
 import heroImage from "@/Imagenes/hero.jpg";
@@ -52,15 +52,9 @@ const PRODUCTOS = [
 
 // ─── Página principal ─────────────────────────────────────────────────────────
 export default function Home() {
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { theme } = useTheme();
 
-  // Evita el flash de hidratación — no renderiza hasta que el tema esté listo
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) return null;
-
-  const isDark = resolvedTheme === "dark";
+  const isDark = theme === "dark";
 
   function handleAgregar(nombre: string) {
     // TODO: conectar con carrito de compras
@@ -70,13 +64,13 @@ export default function Home() {
   return (
     <div className={`min-h-screen transition-colors duration-300 ${
       isDark
-        ? "bg-gradient-to-br from-pink-600/40 via-fuchsia-500/10 to-sky-600/40"
-        : "bg-gradient-to-br from-pink-100 via-fuchsia-50 to-sky-100"
+        ? "bg-linear-to-br from-pink-600/40 via-fuchsia-500/10 to-sky-600/40"
+        : "bg-linear-to-br from-pink-100 via-fuchsia-50 to-sky-100"
     }`}>
       <PublicHeader />
 
       {/* ── Hero ── */}
-      <section className="relative h-[90.7vh] min-h-[26rem] overflow-hidden">
+      <section className="relative h-[90.7vh] min-h-104 overflow-hidden">
         <Image
           src={heroImage}
           alt="Imagen de moda"
@@ -86,8 +80,8 @@ export default function Home() {
         />
         <div className={`absolute inset-0 ${
           isDark
-            ? "bg-gradient-to-br from-pink-600/40 via-fuchsia-500/10 to-sky-600/40"
-            : "bg-gradient-to-br from-pink-200/60 via-fuchsia-100/30 to-sky-200/60"
+            ? "bg-linear-to-br from-pink-600/40 via-fuchsia-500/10 to-sky-600/40"
+            : "bg-linear-to-br from-pink-200/60 via-fuchsia-100/30 to-sky-200/60"
         }`} />
         <div className="relative z-10 mx-auto flex h-full max-w-7xl flex-col justify-center px-4 py-16 text-center text-white sm:px-6 lg:px-8">
           <p className="mb-4 text-sm uppercase tracking-[0.35em] text-pink-200 sm:text-base">
@@ -119,7 +113,7 @@ export default function Home() {
       {/* ── Productos más vendidos ── */}
       <section id="productos" className="py-10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="overflow-hidden rounded-[2rem] bg-white dark:bg-gray-800/50 shadow-2xl ring-1 ring-black/5">
+          <div className="overflow-hidden rounded-4xl bg-white dark:bg-gray-800/50 shadow-2xl ring-1 ring-black/5">
             <div className="px-6 py-10 sm:px-10 sm:py-12 lg:px-12">
               <div className="mb-10 max-w-2xl">
                 <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
@@ -161,7 +155,7 @@ export default function Home() {
       {/* ── Sobre nosotros ── */}
       <section id="sobre-nosotros" className="py-16 text-gray-900 dark:text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="overflow-hidden rounded-[2rem] bg-white dark:bg-slate-900/90 p-8 shadow-2xl ring-1 ring-gray-200 dark:ring-white/10 sm:p-12">
+          <div className="overflow-hidden rounded-4xl bg-white dark:bg-slate-900/90 p-8 shadow-2xl ring-1 ring-gray-200 dark:ring-white/10 sm:p-12">
             <div className="grid gap-12 lg:grid-cols-[1.3fr_0.9fr] lg:items-center">
               <div>
                 <p className="text-sm uppercase tracking-[0.35em] text-pink-600 dark:text-pink-300">
@@ -197,7 +191,7 @@ export default function Home() {
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
 
             {/* Info de contacto */}
-            <div className="rounded-[2rem] bg-white dark:bg-slate-900/90 p-8 shadow-2xl ring-1 ring-gray-200 dark:ring-white/10 sm:p-10">
+            <div className="rounded-4xl bg-white dark:bg-slate-900/90 p-8 shadow-2xl ring-1 ring-gray-200 dark:ring-white/10 sm:p-10">
               <p className="text-sm uppercase tracking-[0.35em] text-pink-600 dark:text-pink-300">Contacto</p>
               <h2 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
                 Estamos aquí para ayudarte
@@ -254,7 +248,7 @@ function ContactForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-[2rem] bg-white dark:bg-slate-900/90 p-8 shadow-2xl ring-1 ring-gray-200 dark:ring-white/10 sm:p-10"
+      className="rounded-4xl bg-white dark:bg-slate-900/90 p-8 shadow-2xl ring-1 ring-gray-200 dark:ring-white/10 sm:p-10"
     >
       <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Escríbenos</h3>
       <p className="mt-2 text-sm text-gray-500 dark:text-slate-400">

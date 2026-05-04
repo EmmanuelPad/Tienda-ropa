@@ -96,7 +96,7 @@ function Signup()
       <PublicHeader issignup={true} />
 
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl sm:p-10">
+        <div className="overflow-hidden rounded-4xl border border-white/10 bg-white/5 p-8 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl sm:p-10">
           <div className="mb-10 text-center">
             <p className="text-sm uppercase tracking-[0.35em] text-pink-300">Crea tu cuenta</p>
             <h1 className="mt-4 text-4xl font-bold text-white">Registro</h1>

@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchUserRole = async (uid: string) => {
     
     try {
-      const res = await fetch(`/api/user/route.ts?uid=${uid}`);
+      const res = await fetch(`/api/user/role?uid=${uid}`);
       if (res.ok) {
         const data = await res.json();
         setIsAdmin(data.role === 'admin');

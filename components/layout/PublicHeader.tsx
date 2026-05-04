@@ -8,16 +8,11 @@ import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "next-themes";
 
 function PublicHeader({ islogin = false, issignup = false }: { islogin?: boolean; issignup?: boolean }) {
-  const { user, loading, signOut } = useAuth();
-  const { resolvedTheme, setTheme } = useTheme();
+  const { user, loading, signOut, isAdmin } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Evitar flash de hidratación
-  useEffect(() => setMounted(true), []);
-
-  // Cerrar menú al hacer clic fuera
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -28,81 +23,145 @@ function PublicHeader({ islogin = false, issignup = false }: { islogin?: boolean
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const isDark = !mounted || resolvedTheme === "dark";
-
-  const toggleTheme = () => {
-    setTheme(isDark ? "light" : "dark");
-  };
+  const isDark = theme === "dark";
+  const toggleTheme = () => setTheme(isDark ? "light" : "dark");
+  const displayName = user?.displayName?.split(" ")[0] || user?.email?.split("@")[0] || "";
 
   const handleSignOut = async () => {
     try {
       await fetch("/api/sessionLogout", { method: "POST" });
     } catch {
-      // Continuar con signOut local aunque falle
+      // Continuar aunque falle
     }
     await signOut();
   };
 
-  // Obtener nombre a mostrar del usuario
-  const displayName = user?.displayName?.split(" ")[0] || user?.email?.split("@")[0] || "";
+  const linkClass = `rounded-lg px-3 py-2 text-sm font-medium transition hover:bg-pink-500/10 hover:text-pink-400 ${isDark ? "text-white" : "text-gray-900"}`;
 
   return (
-    <header
-      className={`sticky top-0 z-50 shadow-sm backdrop-blur-sm transition-colors duration-300 ${
-        isDark ? "bg-gray-900/95 text-white" : "bg-white/95 text-gray-900"
-      }`}
-    >
+    <header className={`sticky top-0 z-50 shadow-sm backdrop-blur-sm transition-colors duration-300 ${
+      isDark ? "bg-gray-900/95 text-white" : "bg-white/95 text-gray-900"
+    }`}>
       <div className="mx-auto flex max-w-7xl items-center justify-between px-2 py-1 sm:px-6 lg:px-8">
 
         {/* Logo */}
-        <a href="/">
+        <Link href="/">
           <div className="flex items-center gap-2">
             <div className="relative h-12 w-20 overflow-hidden">
               <Image src={logo} alt="Logo tienda" fill className="object-contain" />
             </div>
             <div>
-              <p className={`text-sm font-style uppercase tracking-[0.3em] ${isDark ? "text-pink-300" : "text-pink-600"}`}>
+              <p className={`text-sm uppercase tracking-[0.3em] ${isDark ? "text-pink-300" : "text-pink-600"}`}>
                 Alta pinta
               </p>
               <h1 className="text-xl font-semibold">Moda para todos</h1>
             </div>
           </div>
-        </a>
+        </Link>
 
-        {/* Nav */}
-        <nav className="hidden items-center gap-8 md:flex">
-          <Link href="/dashboard" className="text-sm font-medium transition hover:text-pink-400">
-            Productos
-          </Link>
-          <Link href="#sobre-nosotros" className="text-sm font-medium transition hover:text-pink-400">
-            Sobre Nosotros
-          </Link>
+        {/* ── Nav según rol ── */}
+        <nav className="hidden items-center gap-1 md:flex">
+          {isAdmin ? (
+            <>
+              <Link href="/dashboard" className={linkClass}>
+                Productos
+              </Link>
+              <Link href="/dashboard/admin/usuarios" className={linkClass}>
+                Administrar
+              </Link>
+              <Link
+                href="/dashboard/productos/nuevo"
+                className="ml-2 rounded-lg bg-pink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-400"
+              >
+                + Nuevo producto
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link href="/dashboard" className={linkClass}>
+                Productos
+              </Link>
+              <Link href="#sobre-nosotros" className={linkClass}>
+                Sobre Nosotros
+              </Link>
+            </>
+          )}
         </nav>
 
-        {/* Acciones */}
+        {/* ── Acciones derecha ── */}
         <div className="flex items-center gap-3">
           {loading ? (
             <span className="text-sm text-slate-400">Cargando...</span>
           ) : user ? (
-            // Usuario logueado — menú desplegable
             <div className="relative" ref={menuRef}>
+              {/* Botón usuario con badge ADMIN */}
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-3 py-2 text-sm font-medium text-white transition hover:border-pink-300 hover:bg-pink-500/10"
+                className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition ${
+                  isAdmin
+                    ? "border-pink-400/40 bg-pink-500/10 text-pink-200 hover:border-pink-300 hover:bg-pink-500/20"
+                    : "border-white/20 bg-white/5 text-white hover:border-pink-300 hover:bg-pink-500/10"
+                }`}
               >
+                {isAdmin && (
+                  <span className="rounded-full bg-pink-500 px-1.5 py-0.5 text-[10px] font-bold text-white leading-tight">
+                    ADMIN
+                  </span>
+                )}
                 <span className="text-pink-300">@{displayName}</span>
                 <svg
                   className={`h-4 w-4 transition-transform ${menuOpen ? "rotate-180" : ""}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
+              {/* Menú desplegable */}
               {menuOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-lg border border-white/10 bg-gray-800 py-1 shadow-lg">
+                <div className="absolute right-0 mt-2 w-52 rounded-lg border border-white/10 bg-gray-800 py-1 shadow-lg">
+
+                  {/* Sección admin */}
+                  {isAdmin && (
+                    <>
+                      <p className="px-4 py-2 text-xs font-medium uppercase tracking-wider text-pink-400">
+                        Panel admin
+                      </p>
+                      <Link
+                        href="/dashboard/productos"
+                        className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-white/5"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <svg className="h-4 w-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                        </svg>
+                        Gestionar productos
+                      </Link>
+                      <Link
+                        href="/dashboard/admin/usuarios"
+                        className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-white/5"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <svg className="h-4 w-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Gestionar usuarios
+                      </Link>
+                      <Link
+                        href="/dashboard/productos/nuevo"
+                        className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-white/5"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <svg className="h-4 w-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        Agregar producto
+                      </Link>
+                      <hr className="my-1 border-white/10" />
+                    </>
+                  )}
+
+                  {/* Opciones comunes */}
                   <Link
                     href="/dashboard/configuracion"
                     className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-white/5"
@@ -114,7 +173,6 @@ function PublicHeader({ islogin = false, issignup = false }: { islogin?: boolean
                     </svg>
                     Configuración
                   </Link>
-
                   <button
                     onClick={() => { toggleTheme(); setMenuOpen(false); }}
                     className="flex w-full items-center gap-2 px-4 py-2 text-sm text-white hover:bg-white/5"
@@ -128,9 +186,7 @@ function PublicHeader({ islogin = false, issignup = false }: { islogin?: boolean
                     </svg>
                     {isDark ? "Modo claro" : "Modo oscuro"}
                   </button>
-
                   <hr className="my-1 border-white/10" />
-
                   <button
                     onClick={() => { handleSignOut(); setMenuOpen(false); }}
                     className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-white/5"
@@ -144,7 +200,6 @@ function PublicHeader({ islogin = false, issignup = false }: { islogin?: boolean
               )}
             </div>
           ) : (
-            // Usuario no logueado
             <>
               {!issignup && (
                 <Link href="/Signup">
@@ -163,10 +218,12 @@ function PublicHeader({ islogin = false, issignup = false }: { islogin?: boolean
             </>
           )}
 
-          {/* Carrito */}
-          <button className="relative inline-flex items-center gap-2 rounded-full bg-pink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-400">
-            <span>Carrito</span>
-          </button>
+          {/* Carrito solo para usuarios normales */}
+          {!isAdmin && (
+            <button className="relative inline-flex items-center gap-2 rounded-full bg-pink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-400">
+              <span>Carrito</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

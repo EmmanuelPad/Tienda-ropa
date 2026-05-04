@@ -1,15 +1,16 @@
 // components/AuthHeader.tsx
 import Link from "next/link";
-
+import { ThemeProvider } from "./theme-provider";
 interface AuthHeaderProps {
   user: {
     email?: string | null;
     uid: string;
   } | null;
 }
-
+// Componente de cabecera para páginas protegidas
 export default function AuthHeader({ user }: AuthHeaderProps) {
   return (
+<ThemeProvider>
     <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/70 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link
@@ -45,5 +46,6 @@ export default function AuthHeader({ user }: AuthHeaderProps) {
         </div>
       </div>
     </header>
+    </ThemeProvider>
   );
 }

@@ -64,8 +64,7 @@ const menuItems: MenuItem[] = [
 
 export default function ConfiguracionPage() {
   const { user } = useAuth();
-  const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
   const [seccionActiva, setSeccionActiva] = useState<Seccion>("cuenta");
   const [nombre, setNombre] = useState("");
   const [username, setUsername] = useState("");
@@ -80,15 +79,12 @@ export default function ConfiguracionPage() {
   });
 
   useEffect(() => {
-    setMounted(true);
-    // Cargar username guardado (solo este dato, el tema lo maneja next-themes)
+    // Cargar username guardado
     const savedUsername = localStorage.getItem("username");
     if (savedUsername) setUsername(savedUsername);
   }, []);
 
-  if (!mounted) return null;
-
-  const isDark = resolvedTheme === "dark";
+  const isDark = theme === "dark";
 
   // Clases dinámicas centralizadas usando dark: de Tailwind
   const c = {
@@ -279,7 +275,7 @@ export default function ConfiguracionPage() {
 
         <div className="flex gap-6">
           {/* Menú lateral */}
-          <nav className="w-64 flex-shrink-0">
+          <nav className="w-64 shrink-0">
             <div className="sticky top-24 space-y-1">
               {menuItems.map((item) => (
                 <button

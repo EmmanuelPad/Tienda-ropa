@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 const COOKIE = process.env.SESSION_COOKIE_NAME || "_session";
 
-// Rutas que requieren solo estar autenticado
-const USER_ROUTES = ["/dashboard/configuracion"];
-
-// Rutas que requieren ser admin (se validan en la página, no aquí)
-const ADMIN_ROUTES = ["/dashboard/productos", "/dashboard/admin"];
-
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
