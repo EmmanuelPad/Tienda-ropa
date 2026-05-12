@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 function Signup() 
 {
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -24,7 +25,7 @@ function Signup()
     setLoading(true);
     setMessage("");
 
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !username || !email || !password || !confirmPassword) {
       setMessage("Por favor completa todos los campos.");
       setMessageType("error");
       setLoading(false);
@@ -62,6 +63,7 @@ function Signup()
         uid: userCredential.user.uid,
         email: email,
         displayName: name,
+        username: username,
         createdAt: new Date().toISOString(),
       });
 
@@ -113,6 +115,17 @@ function Signup()
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Tu nombre completo"
+                className="mt-3 w-full rounded-3xl border border-slate-700 bg-slate-900/90 px-4 py-3 text-sm text-white outline-none transition focus:border-pink-400 focus:ring-2 focus:ring-pink-300/30"
+                required
+              />
+            </label>
+            <label className="block text-sm font-medium text-slate-200">
+              Nombre de usuario
+              <input
+                type="text"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                placeholder="Tu nombre de usuario"
                 className="mt-3 w-full rounded-3xl border border-slate-700 bg-slate-900/90 px-4 py-3 text-sm text-white outline-none transition focus:border-pink-400 focus:ring-2 focus:ring-pink-300/30"
                 required
               />

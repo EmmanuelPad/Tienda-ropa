@@ -79,7 +79,7 @@ export default function AdminProductosPage() {
             </p>
           </div>
           <Link
-            href="/dashboard/productos/nuevo"
+            href="/dashboard/admin/productos/nuevo"
             className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-emerald-400"
           >
             + Nuevo producto

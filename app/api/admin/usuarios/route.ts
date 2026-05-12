@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
         uid: doc.id,
         email: data.email || "",
         displayName: data.displayName || "",
+        username : data.username || "",
         role: data.role || "user",
         createdAt: data.createdAt || null,
       };

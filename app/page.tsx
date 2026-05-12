@@ -140,7 +140,7 @@ export default function Home() {
 
               <div className="mt-10 text-center">
                 <a
-                  href="/Productos"
+                  href="/dashboard"
                   className="inline-flex items-center gap-2 rounded-md bg-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-pink-500/30 transition hover:bg-pink-400"
                 >
                   Ver Todos los Productos
@@ -212,7 +212,6 @@ export default function Home() {
                 ))}
               </div>
             </div>
-
             {/* Formulario */}
             <ContactForm />
           </div>

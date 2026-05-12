@@ -1,14 +1,14 @@
 import cloudinary from "@/lib/cloudinary";
-import {NextRequest} from "next/server";
+import { NextResponse} from "next/server";
 
-export async function POST(request: Request)
+export async function POST(request: NextResponse)
 {
      try {
         const formData = await request.formData();
         const file = formData.get("file") as File | null;
     if (!file) 
         {
-            return NextRequest.json(
+            return NextResponse.json(
                 {
                  ok: false,
                     message: "No file uploaded",   

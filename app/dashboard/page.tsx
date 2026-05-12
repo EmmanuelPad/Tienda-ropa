@@ -134,7 +134,7 @@ function Productos() {
           {isAdmin && (
             <div className="mt-6">
               <Link
-                href="/dashboard/productos"
+                href="/dashboard/admin/productos"
                 className="inline-flex items-center gap-2 rounded-xl bg-emerald-500/20 border border-emerald-500/50 px-4 py-2 text-sm font-semibold text-emerald-400 transition hover:bg-emerald-500/30"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -78,12 +78,6 @@ export default function ConfiguracionPage() {
     promociones: false,
   });
 
-  useEffect(() => {
-    // Cargar username guardado
-    const savedUsername = localStorage.getItem("username");
-    if (savedUsername) setUsername(savedUsername);
-  }, []);
-
   const isDark = theme === "dark";
 
   // Clases dinámicas centralizadas usando dark: de Tailwind
@@ -103,14 +97,30 @@ export default function ConfiguracionPage() {
   };
 
   const inputClass = `mt-1 w-full rounded-lg border ${c.border} ${c.inputBg} px-4 py-2 ${c.text} focus:border-pink-500 focus:outline-none`;
-
+// Guardar cambios 
   const handleGuardar = async () => {
     setGuardando(true);
-    if (username) localStorage.setItem("username", username);
-    await new Promise((r) => setTimeout(r, 800));
-    setGuardando(false);
-    setGuardado(true);
-    setTimeout(() => setGuardado(false), 3000);
+    try {      // Aquí iría la lógica para guardar los cambios en el backend
+      // Por ejemplo, podrías hacer una petición POST a /api/user/update con los datos actualizados
+      const response = await fetch("/api/user/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          nombre,
+          telefono,
+          direccion,
+        }),
+      });
+      setGuardado(true);
+      setTimeout(() => setGuardado(false), 2000); // Resetear mensaje después de 2 segundos
+    } catch (error) {
+      console.error("Error al guardar cambios:", error);
+    } finally {
+      setGuardando(false);
+    }
   };
 
   if (!user) {
@@ -133,7 +143,7 @@ export default function ConfiguracionPage() {
             <div className="space-y-4">
               <div>
                 <label className={`block text-sm ${c.textSec}`}>Nombre de usuario</label>
-                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="@tuusername" className={inputClass} />
+                <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="tu Nombre de usuario" className={inputClass} />
               </div>
               <div>
                 <label className={`block text-sm ${c.textSec}`}>Email</label>
@@ -141,7 +151,7 @@ export default function ConfiguracionPage() {
               </div>
               <div>
                 <label className={`block text-sm ${c.textSec}`}>Nombre</label>
-                <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Tu nombre" className={inputClass} />
+                <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Tu nombre completo" className={inputClass} />
               </div>
               <div>
                 <label className={`block text-sm ${c.textSec}`}>Teléfono</label>

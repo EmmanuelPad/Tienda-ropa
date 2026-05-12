@@ -66,15 +66,10 @@ function PublicHeader({ islogin = false, issignup = false }: { islogin?: boolean
               <Link href="/dashboard" className={linkClass}>
                 Productos
               </Link>
-              <Link href="/dashboard/admin/usuarios" className={linkClass}>
+              <Link href="/dashboard/admin" className={linkClass}>
                 Administrar
               </Link>
-              <Link
-                href="/dashboard/productos/nuevo"
-                className="ml-2 rounded-lg bg-pink-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-400"
-              >
-                + Nuevo producto
-              </Link>
+              
             </>
           ) : (
             <>
