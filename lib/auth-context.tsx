@@ -10,6 +10,8 @@ interface AuthContextType {
   loading: boolean;
   signOut: () => Promise<void>;
   isAdmin: boolean;
+  username: string; // ← nuevo: nombre de usuario desde Firestore
+  setUsername: (u: string) => void; // ← para actualizar sin recargar tras guardar en Config
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -17,26 +19,34 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signOut: async () => {},
   isAdmin: false,
+  username: "",
+  setUsername: () => {},
 });
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [username, setUsername] = useState("");
   const router = useRouter();
 
-  // Obtiene el rol del usuario y devuelve true si es admin
-  const fetchUserRole = async (uid: string): Promise<boolean> => {
+  // Obtiene el rol y el username del usuario
+  const fetchUserData = async (uid: string): Promise<{ isAdmin: boolean; username: string }> => {
     try {
-      const res = await fetch(`/api/user/role?uid=${uid}`);
-      if (res.ok) {
-        const data = await res.json();
-        return data.role === "admin";
-      }
+      // Rol
+      const roleRes = await fetch(`/api/user/role?uid=${uid}`);
+      const roleData = roleRes.ok ? await roleRes.json() : {};
+      const isAdmin = roleData.role === "admin";
+
+      // Username desde Firestore
+      const userRes = await fetch(`/api/user?uid=${uid}`);
+      const userData = userRes.ok ? await userRes.json() : {};
+      const username = userData?.usuario?.username || "";
+
+      return { isAdmin, username };
     } catch {
-      // silenciar error de red
+      return { isAdmin: false, username: "" };
     }
-    return false;
   };
 
   useEffect(() => {
@@ -44,14 +54,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(firebaseUser);
 
       if (firebaseUser) {
-        // ── CORRECCIÓN: esperar el rol ANTES de quitar el loading ──
-        const admin = await fetchUserRole(firebaseUser.uid);
-        setIsAdmin(admin);
+        const { isAdmin, username } = await fetchUserData(firebaseUser.uid);
+        setIsAdmin(isAdmin);
+        setUsername(username);
       } else {
         setIsAdmin(false);
+        setUsername("");
       }
 
-      // Solo se pone false DESPUÉS de conocer el rol
       setLoading(false);
     });
 
@@ -64,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, signOut, isAdmin, username, setUsername }}>
       {children}
     </AuthContext.Provider>
   );

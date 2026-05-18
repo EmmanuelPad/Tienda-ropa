@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent, useEffect, useRef, useCallback } from "react";
 import { useRequireRole } from "@/lib/useRequireRole";
 import AdminHeader from "@/components/layout/AdminHeader";
+import Image from "next/image";
 
 interface Category {
   id: string;
@@ -15,20 +16,28 @@ export default function NuevoProductoPage() {
   const router = useRouter();
   const { loading: roleLoading, isAdmin, user } = useRequireRole("admin");
 
-  const [categorias, setCategorias] = useState<Category[]>([]);
+  const [categorias, setCategorias]     = useState<Category[]>([]);
   const [seleccionadas, setSeleccionadas] = useState<string[]>([]);
-  const [loadingCats, setLoadingCats] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [loadingCats, setLoadingCats]   = useState(true);
+  const [isSaving, setIsSaving]         = useState(false);
+  const [error, setError]               = useState("");
+
+  // ── Imagen ──
+  const [imageFile, setImageFile]       = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [uploadingImg, setUploadingImg] = useState(false);
+  const [uploadedUrl, setUploadedUrl]   = useState("");
+  const [uploadedPublicId, setUploadedPublicId] = useState("");
+  const [dragOver, setDragOver]         = useState(false);
+  const fileInputRef                    = useRef<HTMLInputElement>(null);
 
   // ── Modal nueva categoría ──
-  const [modalOpen, setModalOpen] = useState(false);
-  const [nuevaNombre, setNuevaNombre] = useState("");
-  const [nuevaDesc, setNuevaDesc] = useState("");
+  const [modalOpen, setModalOpen]       = useState(false);
+  const [nuevaNombre, setNuevaNombre]   = useState("");
+  const [nuevaDesc, setNuevaDesc]       = useState("");
   const [guardandoCat, setGuardandoCat] = useState(false);
-  const [errorCat, setErrorCat] = useState("");
+  const [errorCat, setErrorCat]         = useState("");
 
-  /* ── Cargar categorías ── */
   useEffect(() => {
     if (!roleLoading && isAdmin) fetchCategorias();
   }, [roleLoading, isAdmin]);
@@ -36,13 +45,10 @@ export default function NuevoProductoPage() {
   async function fetchCategorias() {
     setLoadingCats(true);
     try {
-      const res = await fetch("/api/categories");
+      const res  = await fetch("/api/categories");
       const data = await res.json();
-      if (data.ok) {
-        setCategorias(data.data ?? []);
-      } else {
-        setError(data.error || "Error al cargar categorías");
-      }
+      if (data.ok) setCategorias(data.data ?? []);
+      else setError(data.error || "Error al cargar categorías");
     } catch {
       setError("Error de conexión al cargar categorías");
     } finally {
@@ -50,20 +56,68 @@ export default function NuevoProductoPage() {
     }
   }
 
-  /* ── Toggle checkbox ── */
-  const toggleCategoria = (id: string) => {
+  const toggleCategoria = (id: string) =>
     setSeleccionadas((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
     );
+
+  // ── Manejo de imagen ──
+  const handleImageChange = useCallback((file: File) => {
+    if (!file.type.startsWith("image/")) {
+      setError("Solo se permiten archivos de imagen.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("La imagen no puede superar 5 MB.");
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    // Limpiar URL previa si el usuario cambia la imagen
+    setUploadedUrl("");
+    setUploadedPublicId("");
+  }, []);
+
+  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleImageChange(file);
   };
 
-  /* ── Crear nueva categoría desde el modal ── */
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+    setUploadedUrl("");
+    setUploadedPublicId("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // Sube la imagen a Cloudinary y devuelve la URL
+  async function uploadImage(): Promise<{ url: string; publicId: string } | null> {
+    if (!imageFile) return null;
+    setUploadingImg(true);
+    try {
+      const form = new FormData();
+      form.append("file", imageFile);
+      const res  = await fetch("/api/upload", { method: "POST", body: form });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.message || "Error al subir imagen");
+      return { url: data.url, publicId: data.publicId };
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al subir imagen");
+      return null;
+    } finally {
+      setUploadingImg(false);
+    }
+  }
+
   async function handleCrearCategoria() {
     if (!nuevaNombre.trim()) return;
     setGuardandoCat(true);
     setErrorCat("");
     try {
-      const res = await fetch("/api/categories", {
+      const res  = await fetch("/api/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: nuevaNombre.trim(), description: nuevaDesc.trim() }),
@@ -74,7 +128,6 @@ export default function NuevoProductoPage() {
         setNuevaDesc("");
         setModalOpen(false);
         await fetchCategorias();
-        // Auto-seleccionar la recién creada
         setSeleccionadas((prev) => [...prev, data.data.id]);
       } else {
         setErrorCat(data.error || "Error al crear la categoría");
@@ -86,7 +139,6 @@ export default function NuevoProductoPage() {
     }
   }
 
-  /* ── Submit producto ── */
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -97,21 +149,35 @@ export default function NuevoProductoPage() {
     }
 
     setIsSaving(true);
-    const formData = new FormData(event.currentTarget);
-
-    const product = {
-      name: String(formData.get("nombre") ?? "").trim(),
-      categories: seleccionadas,
-      price: Number(formData.get("precio") ?? 0),
-      stock: Number(formData.get("stock") ?? 0),
-      description: String(formData.get("descripcion") ?? "").trim(),
-    };
 
     try {
+      // 1. Subir imagen si hay una seleccionada
+      let imgUrl    = uploadedUrl;
+      let imgPubId  = uploadedPublicId;
+
+      if (imageFile && !uploadedUrl) {
+        const uploaded = await uploadImage();
+        if (!uploaded) { setIsSaving(false); return; }
+        imgUrl   = uploaded.url;
+        imgPubId = uploaded.publicId;
+      }
+
+      // 2. Crear el producto
+      const formData = new FormData(event.currentTarget);
+      const product = {
+        name:        String(formData.get("nombre") ?? "").trim(),
+        categories:  seleccionadas,
+        price:       Number(formData.get("precio") ?? 0),
+        stock:       Number(formData.get("stock") ?? 0),
+        description: String(formData.get("descripcion") ?? "").trim(),
+        imageUrl:    imgUrl,
+        publicId:    imgPubId,
+      };
+
       const response = await fetch("/api/products", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(product),
+        body:    JSON.stringify(product),
       });
 
       if (!response.ok) {
@@ -128,7 +194,6 @@ export default function NuevoProductoPage() {
     }
   }
 
-  /* ── Loading rol ── */
   if (roleLoading) {
     return (
       <main className="min-h-screen bg-slate-950 text-white">
@@ -164,6 +229,98 @@ export default function NuevoProductoPage() {
           )}
 
           <div className="grid gap-6">
+
+            {/* ── Imagen del producto ── */}
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-300">
+                Imagen del producto
+                <span className="ml-2 text-xs text-slate-500">(opcional · máx. 5 MB)</span>
+              </label>
+
+              {imagePreview ? (
+                /* Vista previa */
+                <div className="relative w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-800">
+                  <div className="relative h-64 w-full">
+                    <Image
+                      src={imagePreview}
+                      alt="Vista previa del producto"
+                      fill
+                      className="object-contain p-2"
+                    />
+                  </div>
+                  {/* Acciones sobre la imagen */}
+                  <div className="flex items-center justify-between border-t border-slate-700 px-4 py-3">
+                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                      <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="truncate max-w-[200px]">{imageFile?.name}</span>
+                      <span className="text-slate-500">
+                        ({imageFile ? (imageFile.size / 1024).toFixed(0) : 0} KB)
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs text-slate-300 hover:border-emerald-400 hover:text-emerald-400 transition"
+                      >
+                        Cambiar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="rounded-lg border border-red-500/40 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/10 transition"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Zona de drop */
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={handleFileDrop}
+                  className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed py-10 transition
+                    ${dragOver
+                      ? "border-emerald-400 bg-emerald-400/5"
+                      : "border-slate-700 bg-slate-800/40 hover:border-slate-500 hover:bg-slate-800/60"
+                    }`}
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-700">
+                    <svg className="h-6 w-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-slate-300">
+                      {dragOver ? "Suelta la imagen aquí" : "Arrastra una imagen o haz clic para seleccionar"}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">PNG, JPG, WEBP — máx. 5 MB</p>
+                  </div>
+                  <span className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-1.5 text-xs font-semibold text-emerald-400">
+                    Seleccionar imagen
+                  </span>
+                </div>
+              )}
+
+              {/* Input oculto */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImageChange(file);
+                }}
+              />
+            </div>
+
             {/* Nombre */}
             <div>
               <label htmlFor="nombre" className="mb-2 block text-sm font-medium text-slate-300">
@@ -181,7 +338,6 @@ export default function NuevoProductoPage() {
 
             {/* ── Categorías ── */}
             <div>
-              {/* Encabezado con contador y botón nueva categoría */}
               <div className="mb-3 flex items-center justify-between gap-3">
                 <label className="text-sm font-medium text-slate-300">
                   Categorías
@@ -191,8 +347,6 @@ export default function NuevoProductoPage() {
                     </span>
                   )}
                 </label>
-
-                {/* ── Botón nueva categoría ── */}
                 <button
                   type="button"
                   onClick={() => { setModalOpen(true); setErrorCat(""); }}
@@ -208,69 +362,40 @@ export default function NuevoProductoPage() {
               </div>
 
               {loadingCats ? (
-                <div className="flex items-center gap-2 py-2 text-sm text-slate-400">
+                <div className="flex items-center gap-2 py-4 text-sm text-slate-400">
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
                   Cargando categorías...
                 </div>
               ) : categorias.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-700 p-6 text-center">
-                  <p className="text-sm text-slate-400">No hay categorías registradas.</p>
-                  <button
-                    type="button"
-                    onClick={() => setModalOpen(true)}
-                    className="mt-2 text-xs text-emerald-400 hover:text-emerald-300 underline"
-                  >
-                    Crear la primera categoría →
-                  </button>
-                </div>
+                <p className="rounded-xl border border-slate-700 bg-slate-800/50 px-4 py-3 text-sm text-slate-400">
+                  No hay categorías. Crea una con el botón de arriba.
+                </p>
               ) : (
-                /* ── Grid de tarjetas: 2 cols en móvil, 3 en sm+ ── */
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {categorias.map((cat) => {
-                    const checked = seleccionadas.includes(cat.id);
+                    const isSelected = seleccionadas.includes(cat.id);
                     return (
-                      <label
+                      <button
                         key={cat.id}
-                        className={`relative flex cursor-pointer flex-col gap-1 rounded-xl border-2 p-3
-                          transition select-none
-                          ${checked
-                            ? "border-emerald-500 bg-emerald-500/10"
-                            : "border-slate-700 bg-slate-950 hover:border-slate-500 hover:bg-white/[0.02]"
+                        type="button"
+                        onClick={() => toggleCategoria(cat.id)}
+                        className={`relative flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-sm transition
+                          ${isSelected
+                            ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
+                            : "border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-500"
                           }`}
                       >
-                        {/* Checkbox oculto */}
-                        <input
-                          type="checkbox"
-                          className="sr-only"
-                          checked={checked}
-                          onChange={() => toggleCategoria(cat.id)}
-                        />
-
-                        {/* Check badge arriba a la derecha */}
-                        <div className={`absolute top-2 right-2 flex h-4 w-4 items-center justify-center
-                          rounded border-2 transition
-                          ${checked
-                            ? "border-emerald-500 bg-emerald-500"
-                            : "border-slate-600 bg-transparent"
-                          }`}
+                        <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition
+                          ${isSelected ? "border-emerald-500 bg-emerald-500" : "border-slate-600"}`}
                         >
-                          {checked && (
-                            <svg className="h-2.5 w-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          {isSelected && (
+                            <svg className="h-3 w-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                             </svg>
                           )}
-                        </div>
-
-                        <p className={`pr-5 text-sm font-semibold leading-tight truncate
-                          ${checked ? "text-emerald-300" : "text-white"}`}>
-                          {cat.name}
-                        </p>
-                        {cat.description && (
-                          <p className="text-[11px] text-slate-500 leading-snug line-clamp-2">
-                            {cat.description}
-                          </p>
-                        )}
-                      </label>
+                        </span>
+                        <span className="truncate">{cat.name}</span>
+                      </button>
                     );
                   })}
                 </div>
@@ -278,7 +403,7 @@ export default function NuevoProductoPage() {
             </div>
 
             {/* Precio y Stock */}
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="precio" className="mb-2 block text-sm font-medium text-slate-300">
                   Precio (MXN)
@@ -290,7 +415,7 @@ export default function NuevoProductoPage() {
                   min="0.01"
                   step="0.01"
                   required
-                  placeholder="Ej. 450.00"
+                  placeholder="0.00"
                   className={inputClass}
                 />
               </div>
@@ -304,7 +429,7 @@ export default function NuevoProductoPage() {
                   type="number"
                   min="0"
                   required
-                  placeholder="Ej. 12"
+                  placeholder="0"
                   className={inputClass}
                 />
               </div>
@@ -319,36 +444,38 @@ export default function NuevoProductoPage() {
                 id="descripcion"
                 name="descripcion"
                 rows={4}
-                placeholder="Describe brevemente el producto..."
-                className="w-full resize-none rounded-xl border border-slate-700 bg-slate-950 px-4 py-3
-                  text-sm text-white outline-none transition placeholder:text-slate-500
-                  focus:border-emerald-400"
+                placeholder="Describe el producto..."
+                className={`${inputClass} resize-none`}
               />
             </div>
           </div>
 
-          {/* Acciones */}
-          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <a
-              href="/dashboard"
-              className="inline-flex justify-center rounded-xl border border-slate-700 px-4 py-2
-                text-sm font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-white"
+          {/* Botones */}
+          <div className="mt-8 flex gap-3">
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="flex-1 rounded-xl border border-slate-700 py-3 text-sm font-semibold text-slate-300 transition hover:border-slate-500 hover:bg-slate-800"
             >
               Cancelar
-            </a>
+            </button>
             <button
               type="submit"
-              disabled={isSaving || seleccionadas.length === 0}
-              className="rounded-xl bg-emerald-500 px-5 py-2 text-sm font-semibold text-slate-900
-                transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isSaving || uploadingImg}
+              className="flex-1 rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {isSaving ? (
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
+              {uploadingImg ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Subiendo imagen...
+                </span>
+              ) : isSaving ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   Guardando...
                 </span>
               ) : (
-                "Guardar producto"
+                "Crear producto"
               )}
             </button>
           </div>
@@ -357,89 +484,69 @@ export default function NuevoProductoPage() {
 
       {/* ── Modal nueva categoría ── */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Overlay */}
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setModalOpen(false)}
-          />
-
-          {/* Panel */}
-          <div className="relative w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl">
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-white">Nueva categoría</h2>
+              <h2 className="text-lg font-bold text-white">Nueva categoría</h2>
               <button
                 onClick={() => setModalOpen(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-white/5 hover:text-white transition"
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition"
               >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
             {errorCat && (
-              <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/30 px-3 py-2 text-sm text-red-400">
+              <p className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">
                 {errorCat}
-              </div>
+              </p>
             )}
 
             <div className="space-y-4">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-300">
-                  Nombre <span className="text-emerald-400">*</span>
-                </label>
+                <label className="mb-1.5 block text-sm font-medium text-slate-300">Nombre</label>
                 <input
                   type="text"
                   value={nuevaNombre}
                   onChange={(e) => setNuevaNombre(e.target.value)}
-                  placeholder="Ej: Mujer, Hombre, Accesorios..."
-                  autoFocus
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5
-                    text-sm text-white outline-none transition placeholder:text-slate-500
-                    focus:border-emerald-400"
+                  placeholder="Ej. Ropa de verano"
+                  className={inputClass}
                 />
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-300">
                   Descripción <span className="text-slate-500">(opcional)</span>
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={nuevaDesc}
                   onChange={(e) => setNuevaDesc(e.target.value)}
-                  placeholder="Breve descripción..."
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5
-                    text-sm text-white outline-none transition placeholder:text-slate-500
-                    focus:border-emerald-400"
+                  placeholder="Descripción breve de la categoría"
+                  rows={3}
+                  className={`${inputClass} resize-none`}
                 />
               </div>
             </div>
 
             <div className="mt-6 flex gap-3">
               <button
-                type="button"
                 onClick={() => setModalOpen(false)}
-                className="flex-1 rounded-xl border border-slate-700 py-2.5 text-sm font-semibold
-                  text-slate-300 transition hover:bg-slate-800"
+                className="flex-1 rounded-xl border border-slate-700 py-2.5 text-sm font-semibold text-slate-300 transition hover:bg-slate-800"
               >
                 Cancelar
               </button>
               <button
-                type="button"
                 onClick={handleCrearCategoria}
-                disabled={guardandoCat || !nuevaNombre.trim()}
-                className="flex-1 rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold
-                  text-slate-900 transition hover:bg-emerald-400 disabled:opacity-50"
+                disabled={!nuevaNombre.trim() || guardandoCat}
+                className="flex-1 rounded-xl bg-emerald-500 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:opacity-50"
               >
                 {guardandoCat ? (
                   <span className="flex items-center justify-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     Creando...
                   </span>
-                ) : (
-                  "Crear categoría"
-                )}
+                ) : "Crear categoría"}
               </button>
             </div>
           </div>

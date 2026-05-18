@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/layout/theme-provider";
+import { ThemeProvider } from "next-themes"; // ← directo, sin wrapper intermedio
 import { AuthProvider } from "@/lib/auth-context";
-import { CartProvider } from "@/lib/CartContext";   // ← NUEVO
+import { CartProvider } from "@/lib/CartContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,11 +26,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <ThemeProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          storageKey="theme"
+        >
           <AuthProvider>
-            <CartProvider>   {/* ← envuelve todo */}
+            <CartProvider>
               {children}
             </CartProvider>
           </AuthProvider>
