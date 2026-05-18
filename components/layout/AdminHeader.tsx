@@ -48,12 +48,19 @@ export default function AdminHeader({ islogin = false, issignup = false }: { isl
     <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/70 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <div className="flex items-center gap-6">
-          <Link
-            href="/dashboard"
-            className="font-bold text-lg tracking-tight text-white hover:text-emerald-400 transition"
-          >
-            Panel<span className="text-emerald-400">.dev</span>
-          </Link>
+          <Link href="/">
+          <div className="flex items-center gap-2">
+            <div className="relative h-12 w-20 overflow-hidden">
+              <Image src={logo} alt="Logo tienda" fill className="object-contain" />
+            </div>
+            <div>
+              <p className={`text-sm uppercase tracking-[0.3em] ${isDark ? "text-pink-300" : "text-pink-600"}`}>
+                Nova Wear
+              </p>
+              <h1 className="text-xl font-semibold">Moda para todos</h1>
+            </div>
+          </div>
+        </Link>
           
           <nav className="hidden md:flex items-center gap-1">
             <Link

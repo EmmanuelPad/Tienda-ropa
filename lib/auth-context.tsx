@@ -18,35 +18,40 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
   isAdmin: false,
 });
-//
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
-  // Función para obtener el rol del usuario desde el backend
-  const fetchUserRole = async (uid: string) => {
-    
+  // Obtiene el rol del usuario y devuelve true si es admin
+  const fetchUserRole = async (uid: string): Promise<boolean> => {
     try {
       const res = await fetch(`/api/user/role?uid=${uid}`);
       if (res.ok) {
         const data = await res.json();
-        setIsAdmin(data.role === 'admin');
+        return data.role === "admin";
       }
     } catch {
-      setIsAdmin(false);
+      // silenciar error de red
     }
+    return false;
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      if (user) {
-        fetchUserRole(user.uid);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+
+      if (firebaseUser) {
+        // ── CORRECCIÓN: esperar el rol ANTES de quitar el loading ──
+        const admin = await fetchUserRole(firebaseUser.uid);
+        setIsAdmin(admin);
       } else {
         setIsAdmin(false);
       }
+
+      // Solo se pone false DESPUÉS de conocer el rol
       setLoading(false);
     });
 

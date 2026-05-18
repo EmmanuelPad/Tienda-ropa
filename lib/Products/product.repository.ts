@@ -3,7 +3,7 @@ import { adminDb } from "../firebase-admin";
 import { CreateProductInput, Product } from "./product";
 
 const COLLECTION_NAME = "products";
-
+// Función para crear un nuevo producto
 export async function createProduct(input: CreateProductInput) : Promise<Product>
 {
     const now = Timestamp.now();
@@ -11,7 +11,7 @@ export async function createProduct(input: CreateProductInput) : Promise<Product
     const productData = 
     {
         name: input.name,
-        category: input.category,
+        categories: input.categories,
         price: input.price,
         stock: input.stock,
         description: input.description,
@@ -23,7 +23,7 @@ export async function createProduct(input: CreateProductInput) : Promise<Product
     return {
         id: docRef.id,
         name: productData.name,
-        category: productData.category,
+        categories: productData.categories,
         price: productData.price,
         stock: productData.stock,
         description: productData.description,
@@ -41,7 +41,7 @@ export async function getProduct() : Promise<Product []>
         return {
             id: doc.id,
             name: String(data.name?? ""),
-            category: String(data.category?? ""),
+            categories: Array.isArray(data.categories) ? data.categories.map(String) : [],
             price: Number(data.price?? 0),
             stock: Number(data.stock?? 0),
             description: String(data.description?? ""),

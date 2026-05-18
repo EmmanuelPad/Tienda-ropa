@@ -2,7 +2,7 @@ export interface Product
 {
     id: string;
     name: string;
-    category: string;
+    idcategories: string[];
     price: number;
     stock: number;
     description: string;
@@ -13,7 +13,7 @@ export interface Product
 export interface CreateProductInput
 {
     name: string;
-    category: string;
+    idcategories: string[];
     price: number;
     stock: number;
     description: string;

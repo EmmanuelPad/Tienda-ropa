@@ -1,6 +1,8 @@
 import { createProduct, deleteProduct, getProduct } from "@/lib/Products/product.repository";
 import { NextRequest, NextResponse } from "next/server";
-
+// GET /api/products - Obtener todos los productos
+// POST /api/products - Crear un nuevo producto
+// DELETE /api/products/:id - Eliminar un producto por ID
 export async function GET() 
 {
     try
@@ -34,7 +36,7 @@ export async function POST(request: NextRequest) {
     {
         const body = await request.json();
         const name = String(body.name??"").trim();
-        const category = String(body.category??"").trim();
+        const category = Array.isArray(body.categories) ? body.categories.map(String) : [];
         const price = Number(body.price??0);
         const stock = Number(body.stock??0);
         const description = String(body.description??"").trim();
@@ -94,7 +96,7 @@ export async function POST(request: NextRequest) {
         const product = await createProduct(
             { 
                 name, 
-                category, 
+                categories: category, 
                 price, 
                 stock, 
                 description 
@@ -103,7 +105,7 @@ export async function POST(request: NextRequest) {
         (
             { 
                 ok: true,
-                product 
+                data: product 
             }, 
             {
                 status: 201 

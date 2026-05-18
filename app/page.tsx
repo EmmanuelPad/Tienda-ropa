@@ -3,6 +3,8 @@
 import { useTheme } from "next-themes";
 import { useState } from "react";
 import PublicHeader from "@/components/layout/PublicHeader";
+import CartSidebar from "@/components/layout/CartSidebar"; // ← AGREGADO
+import { useCart } from "@/lib/CartContext";               // ← AGREGADO
 import Image from "next/image";
 import heroImage from "@/Imagenes/hero.jpg";
 
@@ -53,12 +55,18 @@ const PRODUCTOS = [
 // ─── Página principal ─────────────────────────────────────────────────────────
 export default function Home() {
   const { theme } = useTheme();
+  const { addToCart } = useCart(); // ← AGREGADO
 
   const isDark = theme === "dark";
 
-  function handleAgregar(nombre: string) {
-    // TODO: conectar con carrito de compras
-    alert(`"${nombre}" agregado al carrito`);
+  // ← CORREGIDO: ahora sí agrega al carrito y abre el panel
+  function handleAgregar(p: typeof PRODUCTOS[0]) {
+    addToCart({
+      id: String(p.id),
+      name: p.nombre,
+      price: p.precio,
+      description: p.descripcion,
+    });
   }
 
   return (
@@ -68,6 +76,7 @@ export default function Home() {
         : "bg-linear-to-br from-pink-100 via-fuchsia-50 to-sky-100"
     }`}>
       <PublicHeader />
+      <CartSidebar /> {/* ← AGREGADO: panel lateral del carrito */}
 
       {/* ── Hero ── */}
       <section className="relative h-[90.7vh] min-h-104 overflow-hidden">
@@ -133,7 +142,7 @@ export default function Home() {
                     nombre={p.nombre}
                     descripcion={p.descripcion}
                     precio={p.precio}
-                    onAgregar={() => handleAgregar(p.nombre)}
+                    onAgregar={() => handleAgregar(p)} // ← CORREGIDO
                   />
                 ))}
               </div>

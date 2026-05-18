@@ -131,7 +131,7 @@ export default function AdminProductosPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="rounded-full border border-slate-700 bg-slate-800/50 px-2 py-1 text-xs text-slate-300">
-                        {product.category}
+                        {product.categories.join(", ")}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-300">
