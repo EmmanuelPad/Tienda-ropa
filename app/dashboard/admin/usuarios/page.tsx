@@ -90,11 +90,8 @@ export default function AdminUsuariosPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-<<<<<<< HEAD
       <AdminHeader />
-=======
-      <AdminHeader  />
->>>>>>> master
+
       <div className="mx-auto max-w-5xl px-6 py-8">
         <div className="mb-8">
           <p className="text-sm font-medium text-pink-400">Administración</p>
