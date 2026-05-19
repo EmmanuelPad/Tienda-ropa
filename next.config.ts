@@ -5,17 +5,9 @@ const nextConfig: NextConfig = {
   experimental: {
     scrollRestoration: true,
   },
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
-      },
-    ],
-  },
   // Asegura que los scripts se manejen correctamente
   typescript: {
-    tsconfigPath: "./tsconfig.json",
+    tsconfigPath: './tsconfig.json',
   },
 };
 
