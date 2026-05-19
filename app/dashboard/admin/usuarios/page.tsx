@@ -77,7 +77,7 @@ export default function AdminUsuariosPage() {
   if (loading || cargando) {
     return (
       <main className="min-h-screen bg-slate-950 text-white">
-        <AdminHeader user={user} />
+        <AdminHeader />
         <div className="flex items-center justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-pink-500 border-t-transparent" />
         </div>
@@ -90,7 +90,7 @@ export default function AdminUsuariosPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <AdminHeader user={user} />
+      <AdminHeader  />
       <div className="mx-auto max-w-5xl px-6 py-8">
         <div className="mb-8">
           <p className="text-sm font-medium text-pink-400">Administración</p>
