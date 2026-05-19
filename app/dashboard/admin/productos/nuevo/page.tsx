@@ -16,7 +16,6 @@ export default function NuevoProductoPage() {
   const router = useRouter();
   const { loading: roleLoading, isAdmin } = useRequireRole("admin");
 
-<<<<<<< HEAD
   const [categorias, setCategorias] = useState<Category[]>([]);
   const [seleccionadas, setSeleccionadas] = useState<string[]>([]);
   const [loadingCats, setLoadingCats] = useState(true);
@@ -31,22 +30,7 @@ export default function NuevoProductoPage() {
   const [uploadedPublicId, setUploadedPublicId] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-=======
-  const [categorias, setCategorias]       = useState<Category[]>([]);
-  const [seleccionadas, setSeleccionadas] = useState<string[]>([]);
-  const [loadingCats, setLoadingCats]     = useState(true);
-  const [isSaving, setIsSaving]           = useState(false);
-  const [error, setError]                 = useState("");
 
-  // ── Imagen ──
-  const [imageFile, setImageFile]               = useState<File | null>(null);
-  const [imagePreview, setImagePreview]         = useState<string>("");
-  const [uploadingImg, setUploadingImg]         = useState(false);
-  const [uploadedUrl, setUploadedUrl]           = useState("");
-  const [uploadedPublicId, setUploadedPublicId] = useState("");
-  const [dragOver, setDragOver]                 = useState(false);
-  const fileInputRef                            = useRef<HTMLInputElement>(null);
->>>>>>> master
 
   // ── Modal nueva categoría ──
   const [modalOpen, setModalOpen] = useState(false);
@@ -109,15 +93,11 @@ export default function NuevoProductoPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-<<<<<<< HEAD
   // Sube la imagen a Cloudinary y devuelve la URL
   async function uploadImage(): Promise<{
     url: string;
     publicId: string;
   } | null> {
-=======
-  async function uploadImage(): Promise<{ url: string; publicId: string } | null> {
->>>>>>> master
     if (!imageFile) return null;
     setUploadingImg(true);
     try {
@@ -140,7 +120,6 @@ export default function NuevoProductoPage() {
     setGuardandoCat(true);
     setErrorCat("");
     try {
-<<<<<<< HEAD
       const res = await fetch("/api/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -148,12 +127,6 @@ export default function NuevoProductoPage() {
           name: nuevaNombre.trim(),
           description: nuevaDesc.trim(),
         }),
-=======
-      const res  = await fetch("/api/categories", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ name: nuevaNombre.trim(), description: nuevaDesc.trim() }),
->>>>>>> master
       });
       const data = await res.json();
       if (data.ok) {
@@ -191,13 +164,8 @@ export default function NuevoProductoPage() {
     setIsSaving(true);
 
     try {
-<<<<<<< HEAD
       // 1. Subir imagen si hay una seleccionada
       let imgUrl = uploadedUrl;
-=======
-      // Subir imagen si hay una seleccionada
-      let imgUrl   = uploadedUrl;
->>>>>>> master
       let imgPubId = uploadedPublicId;
 
       if (imageFile && !uploadedUrl) {
@@ -212,7 +180,6 @@ export default function NuevoProductoPage() {
 
       // Crear el producto
       const product = {
-<<<<<<< HEAD
         name: String(formData.get("nombre") ?? "").trim(),
         categories: seleccionadas,
         price: Number(formData.get("precio") ?? 0),
@@ -220,15 +187,6 @@ export default function NuevoProductoPage() {
         description: String(formData.get("descripcion") ?? "").trim(),
         imageUrl: imgUrl,
         publicId: imgPubId,
-=======
-        name:        nombre,
-        categories:  seleccionadas,
-        price:       precio,
-        stock:       stock,
-        description: descripcion,
-        imageUrl:    imgUrl,
-        publicId:    imgPubId,
->>>>>>> master
       };
 
       const response = await fetch("/api/products", {
