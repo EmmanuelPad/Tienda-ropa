@@ -14,7 +14,7 @@ interface Category {
 
 export default function NuevoProductoPage() {
   const router = useRouter();
-  const { loading: roleLoading, isAdmin, user } = useRequireRole("admin");
+  const { loading: roleLoading, isAdmin } = useRequireRole("admin");
 
   const [categorias, setCategorias]     = useState<Category[]>([]);
   const [seleccionadas, setSeleccionadas] = useState<string[]>([]);

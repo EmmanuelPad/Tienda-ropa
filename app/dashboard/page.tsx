@@ -115,7 +115,7 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      {isAdmin ? <AdminHeader user={user} /> : <PublicHeader />}
+      {isAdmin ? <AdminHeader /> : <PublicHeader />}
 
       {/* Panel carrito (solo usuarios normales) */}
       {!isAdmin && <CartSidebar />}
