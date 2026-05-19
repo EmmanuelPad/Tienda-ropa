@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import AdminHeader from "@/components/layout/AdminHeader";
 import PublicHeader from "@/components/layout/PublicHeader";
 import CartSidebar from "@/components/layout/CartSidebar";
@@ -37,6 +38,7 @@ export default function DashboardPage() {
   const [orden, setOrden] = useState("nombre-az");
 
   const { addToCart } = useCart();
+  const router = useRouter();
 
   /* ── Auth ── */
   useEffect(() => {
@@ -226,7 +228,8 @@ export default function DashboardPage() {
             {productosFiltrados.map((producto) => (
               <div
                 key={producto.id}
-                className="group overflow-hidden rounded-3xl border border-white/10 bg-white/5
+                onClick={() => router.push(`/producto/${producto.id}`)}
+                className="group cursor-pointer overflow-hidden rounded-3xl border border-white/10 bg-white/5
                   shadow-sm transition hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-500/10"
               >
                 {/* Imagen del producto */}
@@ -284,14 +287,15 @@ export default function DashboardPage() {
                     {!isAdmin && (
                       <button
                         disabled={producto.stock === 0}
-                        onClick={() =>
+                        onClick={(e) => {
+                          e.stopPropagation();
                           addToCart({
                             id: producto.id,
                             name: producto.name,
                             price: producto.price,
                             description: producto.description,
-                          })
-                        }
+                          });
+                        }}
                         className="rounded-full bg-pink-500 px-4 py-2 text-sm font-semibold text-white
                           transition hover:bg-pink-400 active:scale-95
                           disabled:cursor-not-allowed disabled:opacity-40"
