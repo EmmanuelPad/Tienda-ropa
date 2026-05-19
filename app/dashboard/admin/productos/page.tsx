@@ -58,7 +58,7 @@ export default function AdminProductosPage() {
   if (roleLoading || loading) {
     return (
       <main className="min-h-screen bg-slate-950 text-white">
-        <AdminHeader user={user} />
+        <AdminHeader />
         <div className="flex items-center justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></div>
         </div>
@@ -68,7 +68,7 @@ export default function AdminProductosPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <AdminHeader user={user} />
+      <AdminHeader />
       <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
@@ -131,7 +131,7 @@ export default function AdminProductosPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="rounded-full border border-slate-700 bg-slate-800/50 px-2 py-1 text-xs text-slate-300">
-                        {product.categories.join(", ")}
+                        {product.categories}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-300">
