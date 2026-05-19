@@ -1,14 +1,12 @@
 
 import Link from "next/link";
 import AdminHeader from "@/components/layout/AdminHeader";
-import { getServerUser } from "@/lib/auth-server";
 
 
 export default async function AdminDashboard() {
-    const user = await getServerUser();
     return (
         <main className="min-h-screen bg-slate-950 text-white">
-          <AdminHeader user={user} />
+          <AdminHeader />
     
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
             {/* Header */}

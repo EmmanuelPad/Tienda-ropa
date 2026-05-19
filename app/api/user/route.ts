@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Devolver todos los usuarios
-    const snapshot = await adminDb.collection("users").get();
+    const snapshot = await adminDb.collection("users").orderBy("createdAt", "desc").get();
     const usuarios = snapshot.docs.map((doc) => {
       const data = doc.data();
       return {
