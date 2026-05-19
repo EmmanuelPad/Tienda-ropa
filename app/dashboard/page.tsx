@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import AdminHeader from "@/components/layout/AdminHeader";
 import PublicHeader from "@/components/layout/PublicHeader";
 import CartSidebar from "@/components/layout/CartSidebar";
@@ -9,7 +8,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { useCart } from "@/lib/CartContext";
 import Link from "next/link";
-import Image from "next/image";
 
 interface Category {
   id: string;
@@ -23,7 +21,6 @@ interface Product {
   stock: number;
   description: string;
   idcategories: string[];
-  imageUrl?: string;
 }
 
 export default function DashboardPage() {
@@ -38,7 +35,6 @@ export default function DashboardPage() {
   const [orden, setOrden] = useState("nombre-az");
 
   const { addToCart } = useCart();
-  const router = useRouter();
 
   /* ── Auth ── */
   useEffect(() => {
@@ -228,25 +224,12 @@ export default function DashboardPage() {
             {productosFiltrados.map((producto) => (
               <div
                 key={producto.id}
-                onClick={() => router.push(`/producto/${producto.id}`)}
-                className="group cursor-pointer overflow-hidden rounded-3xl border border-white/10 bg-white/5
+                className="group overflow-hidden rounded-3xl border border-white/10 bg-white/5
                   shadow-sm transition hover:-translate-y-1 hover:shadow-lg hover:shadow-pink-500/10"
               >
-                {/* Imagen del producto */}
-                <div className="relative aspect-square bg-slate-800/50 overflow-hidden">
-                  {producto.imageUrl ? (
-                    <Image
-                      src={producto.imageUrl}
-                      alt={producto.name}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-6xl">
-                      👕
-                    </div>
-                  )}
+                {/* Imagen placeholder */}
+                <div className="aspect-square bg-slate-800/50 flex items-center justify-center text-6xl">
+                  👕
                 </div>
 
                 <div className="p-5">
@@ -287,15 +270,14 @@ export default function DashboardPage() {
                     {!isAdmin && (
                       <button
                         disabled={producto.stock === 0}
-                        onClick={(e) => {
-                          e.stopPropagation();
+                        onClick={() =>
                           addToCart({
                             id: producto.id,
                             name: producto.name,
                             price: producto.price,
                             description: producto.description,
-                          });
-                        }}
+                          })
+                        }
                         className="rounded-full bg-pink-500 px-4 py-2 text-sm font-semibold text-white
                           transition hover:bg-pink-400 active:scale-95
                           disabled:cursor-not-allowed disabled:opacity-40"
