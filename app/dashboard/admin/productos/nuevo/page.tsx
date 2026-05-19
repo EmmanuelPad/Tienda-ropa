@@ -14,22 +14,22 @@ interface Category {
 
 export default function NuevoProductoPage() {
   const router = useRouter();
-  const { loading: roleLoading, isAdmin } = useRequireRole("admin");
+  const { loading: roleLoading, isAdmin, user } = useRequireRole("admin");
 
-  const [categorias, setCategorias]     = useState<Category[]>([]);
+  const [categorias, setCategorias]       = useState<Category[]>([]);
   const [seleccionadas, setSeleccionadas] = useState<string[]>([]);
-  const [loadingCats, setLoadingCats]   = useState(true);
-  const [isSaving, setIsSaving]         = useState(false);
-  const [error, setError]               = useState("");
+  const [loadingCats, setLoadingCats]     = useState(true);
+  const [isSaving, setIsSaving]           = useState(false);
+  const [error, setError]                 = useState("");
 
   // ── Imagen ──
-  const [imageFile, setImageFile]       = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
-  const [uploadingImg, setUploadingImg] = useState(false);
-  const [uploadedUrl, setUploadedUrl]   = useState("");
+  const [imageFile, setImageFile]               = useState<File | null>(null);
+  const [imagePreview, setImagePreview]         = useState<string>("");
+  const [uploadingImg, setUploadingImg]         = useState(false);
+  const [uploadedUrl, setUploadedUrl]           = useState("");
   const [uploadedPublicId, setUploadedPublicId] = useState("");
-  const [dragOver, setDragOver]         = useState(false);
-  const fileInputRef                    = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver]                 = useState(false);
+  const fileInputRef                            = useRef<HTMLInputElement>(null);
 
   // ── Modal nueva categoría ──
   const [modalOpen, setModalOpen]       = useState(false);
@@ -73,7 +73,6 @@ export default function NuevoProductoPage() {
     }
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
-    // Limpiar URL previa si el usuario cambia la imagen
     setUploadedUrl("");
     setUploadedPublicId("");
   }, []);
@@ -93,7 +92,6 @@ export default function NuevoProductoPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Sube la imagen a Cloudinary y devuelve la URL
   async function uploadImage(): Promise<{ url: string; publicId: string } | null> {
     if (!imageFile) return null;
     setUploadingImg(true);
@@ -118,9 +116,9 @@ export default function NuevoProductoPage() {
     setErrorCat("");
     try {
       const res  = await fetch("/api/categories", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: nuevaNombre.trim(), description: nuevaDesc.trim() }),
+        body:    JSON.stringify({ name: nuevaNombre.trim(), description: nuevaDesc.trim() }),
       });
       const data = await res.json();
       if (data.ok) {
@@ -148,12 +146,19 @@ export default function NuevoProductoPage() {
       return;
     }
 
+    // ✅ Leer FormData ANTES de cualquier await
+    const formData    = new FormData(event.currentTarget);
+    const nombre      = String(formData.get("nombre") ?? "").trim();
+    const precio      = Number(formData.get("precio") ?? 0);
+    const stock       = Number(formData.get("stock") ?? 0);
+    const descripcion = String(formData.get("descripcion") ?? "").trim();
+
     setIsSaving(true);
 
     try {
-      // 1. Subir imagen si hay una seleccionada
-      let imgUrl    = uploadedUrl;
-      let imgPubId  = uploadedPublicId;
+      // Subir imagen si hay una seleccionada
+      let imgUrl   = uploadedUrl;
+      let imgPubId = uploadedPublicId;
 
       if (imageFile && !uploadedUrl) {
         const uploaded = await uploadImage();
@@ -162,14 +167,13 @@ export default function NuevoProductoPage() {
         imgPubId = uploaded.publicId;
       }
 
-      // 2. Crear el producto
-      const formData = new FormData(event.currentTarget);
+      // Crear el producto
       const product = {
-        name:        String(formData.get("nombre") ?? "").trim(),
+        name:        nombre,
         categories:  seleccionadas,
-        price:       Number(formData.get("precio") ?? 0),
-        stock:       Number(formData.get("stock") ?? 0),
-        description: String(formData.get("descripcion") ?? "").trim(),
+        price:       precio,
+        stock:       stock,
+        description: descripcion,
         imageUrl:    imgUrl,
         publicId:    imgPubId,
       };
@@ -212,7 +216,6 @@ export default function NuevoProductoPage() {
       <AdminHeader />
 
       <section className="mx-auto max-w-3xl px-6 py-8">
-        {/* Encabezado */}
         <div className="mb-8">
           <p className="text-sm font-medium text-emerald-400">Productos</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight">Nuevo producto</h1>
@@ -238,7 +241,6 @@ export default function NuevoProductoPage() {
               </label>
 
               {imagePreview ? (
-                /* Vista previa */
                 <div className="relative w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-800">
                   <div className="relative h-64 w-full">
                     <Image
@@ -248,7 +250,6 @@ export default function NuevoProductoPage() {
                       className="object-contain p-2"
                     />
                   </div>
-                  {/* Acciones sobre la imagen */}
                   <div className="flex items-center justify-between border-t border-slate-700 px-4 py-3">
                     <div className="flex items-center gap-2 text-sm text-slate-400">
                       <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -278,7 +279,6 @@ export default function NuevoProductoPage() {
                   </div>
                 </div>
               ) : (
-                /* Zona de drop */
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -308,7 +308,6 @@ export default function NuevoProductoPage() {
                 </div>
               )}
 
-              {/* Input oculto */}
               <input
                 ref={fileInputRef}
                 type="file"
