@@ -1,21 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRequireRole } from "@/lib/useRequireRole";
-import { auth } from "@/lib/firebase-client";
 import Link from "next/link";
 import AdminHeader from "@/components/layout/AdminHeader";
 
 interface Product {
   id: string;
   name: string;
-  category: string;
+  categories: string[];
   price: number;
   stock: number;
   description: string;
 }
 
 export default function AdminProductosPage() {
-  const { loading: roleLoading, isAdmin, user } = useRequireRole("admin");
+  const { loading: roleLoading, isAdmin } = useRequireRole("admin");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -42,11 +41,11 @@ export default function AdminProductosPage() {
 
   async function deleteProduct(id: string) {
     if (!confirm("¿Estás seguro de eliminar este producto?")) return;
-    
+
     try {
       const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setProducts(products.filter(p => p.id !== id));
+        setProducts(products.filter((p) => p.id !== id));
       } else {
         alert("Error al eliminar producto");
       }
@@ -58,7 +57,7 @@ export default function AdminProductosPage() {
   if (roleLoading || loading) {
     return (
       <main className="min-h-screen bg-slate-950 text-white">
-        <AdminHeader user={user} />
+        <AdminHeader />
         <div className="flex items-center justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></div>
         </div>
@@ -68,12 +67,16 @@ export default function AdminProductosPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <AdminHeader user={user} />
+      <AdminHeader />
       <div className="mx-auto max-w-7xl px-6 py-8">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium text-emerald-400">Administración</p>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight">Productos</h1>
+            <p className="text-sm font-medium text-emerald-400">
+              Administración
+            </p>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight">
+              Productos
+            </h1>
             <p className="mt-2 text-sm text-slate-400">
               Gestiona los productos de tu tienda
             </p>
@@ -116,7 +119,10 @@ export default function AdminProductosPage() {
             <tbody className="divide-y divide-slate-800">
               {products.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
+                  <td
+                    colSpan={5}
+                    className="px-6 py-12 text-center text-slate-400"
+                  >
                     No hay productos registrados. ¡Crea el primero!
                   </td>
                 </tr>
@@ -124,7 +130,9 @@ export default function AdminProductosPage() {
                 products.map((product) => (
                   <tr key={product.id} className="hover:bg-slate-800/30">
                     <td className="px-6 py-4">
-                      <div className="font-medium text-white">{product.name}</div>
+                      <div className="font-medium text-white">
+                        {product.name}
+                      </div>
                       <div className="text-sm text-slate-500 truncate max-w-xs">
                         {product.description}
                       </div>
@@ -138,19 +146,50 @@ export default function AdminProductosPage() {
                       ${product.price.toLocaleString("es-MX")}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`text-sm ${product.stock > 0 ? "text-emerald-400" : "text-red-400"}`}>
+                      <span
+                        className={`text-sm ${product.stock > 0 ? "text-emerald-400" : "text-red-400"}`}
+                      >
                         {product.stock} unidades
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/dashboard/admin/productos/${product.id}`}
+                          className="rounded-lg p-2 text-slate-400 transition hover:bg-emerald-500/10 hover:text-emerald-400"
+                          title="Editar"
+                        >
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
+                          </svg>
+                        </Link>
                         <button
                           onClick={() => deleteProduct(product.id)}
                           className="rounded-lg p-2 text-slate-400 transition hover:bg-red-500/10 hover:text-red-400"
                           title="Eliminar"
                         >
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
                           </svg>
                         </button>
                       </div>

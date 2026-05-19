@@ -61,7 +61,7 @@ export default function AdminUsuariosPage() {
 
       if (res.ok) {
         setUsuarios((prev) =>
-          prev.map((u) => (u.uid === targetUid ? { ...u, role: nuevoRol } : u))
+          prev.map((u) => (u.uid === targetUid ? { ...u, role: nuevoRol } : u)),
         );
       } else {
         setError("No se pudo cambiar el rol");
@@ -77,7 +77,7 @@ export default function AdminUsuariosPage() {
   if (loading || cargando) {
     return (
       <main className="min-h-screen bg-slate-950 text-white">
-        <AdminHeader user={user} />
+        <AdminHeader />
         <div className="flex items-center justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-pink-500 border-t-transparent" />
         </div>
@@ -90,13 +90,16 @@ export default function AdminUsuariosPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <AdminHeader user={user} />
+      <AdminHeader />
       <div className="mx-auto max-w-5xl px-6 py-8">
         <div className="mb-8">
           <p className="text-sm font-medium text-pink-400">Administración</p>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight">Gestión de usuarios</h1>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight">
+            Gestión de usuarios
+          </h1>
           <p className="mt-2 text-sm text-slate-400">
-            Asigna o revoca permisos de administrador a los usuarios registrados.
+            Asigna o revoca permisos de administrador a los usuarios
+            registrados.
           </p>
         </div>
 
@@ -115,16 +118,27 @@ export default function AdminUsuariosPage() {
             <table className="w-full">
               <thead className="border-b border-slate-800 bg-slate-800/50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-slate-400">Usuario</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-slate-400">Registro</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-slate-400">Rol actual</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider text-slate-400">Acción</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-slate-400">
+                    Usuario
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-slate-400">
+                    Registro
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-slate-400">
+                    Rol actual
+                  </th>
+                  <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider text-slate-400">
+                    Acción
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
                 {usuarios.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-slate-400">
+                    <td
+                      colSpan={4}
+                      className="px-6 py-12 text-center text-slate-400"
+                    >
                       No hay usuarios registrados.
                     </td>
                   </tr>
@@ -132,11 +146,15 @@ export default function AdminUsuariosPage() {
                   usuarios.map((u) => (
                     <tr key={u.uid} className="hover:bg-slate-800/30">
                       <td className="px-6 py-4">
-                        <p className="font-medium text-white">{u.displayName || "Sin nombre"}</p>
+                        <p className="font-medium text-white">
+                          {u.displayName || "Sin nombre"}
+                        </p>
                         <p className="text-sm text-slate-400">{u.email}</p>
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-400">
-                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString("es-MX") : "—"}
+                        {u.createdAt
+                          ? new Date(u.createdAt).toLocaleDateString("es-MX")
+                          : "—"}
                       </td>
                       <td className="px-6 py-4">
                         <span
@@ -151,7 +169,12 @@ export default function AdminUsuariosPage() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
-                          onClick={() => cambiarRol(u.uid, u.role === "admin" ? "user" : "admin")}
+                          onClick={() =>
+                            cambiarRol(
+                              u.uid,
+                              u.role === "admin" ? "user" : "admin",
+                            )
+                          }
                           disabled={asignando === u.uid}
                           className={`rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 ${
                             u.role === "admin"
@@ -162,8 +185,8 @@ export default function AdminUsuariosPage() {
                           {asignando === u.uid
                             ? "Guardando..."
                             : u.role === "admin"
-                            ? "Quitar admin"
-                            : "Hacer admin"}
+                              ? "Quitar admin"
+                              : "Hacer admin"}
                         </button>
                       </td>
                     </tr>

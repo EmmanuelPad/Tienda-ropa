@@ -14,8 +14,8 @@ function PublicHeader({
   islogin?: boolean;
   issignup?: boolean;
 }) {
-  const { user, loading, signOut, isAdmin } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { user, loading, signOut, isAdmin, username } = useAuth();
+  const { resolvedTheme, setTheme } = useTheme();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -29,12 +29,11 @@ function PublicHeader({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const isDark = mounted && theme === "dark";
+  const isDark = resolvedTheme === "dark";
   const toggleTheme = () => setTheme(isDark ? "light" : "dark");
-  const displayName =
-    user?.displayName?.split(" ")[0] || user?.email?.split("@")[0] || "";
+
+  // ── Cambiado: usa username de Firestore; si no tiene, cae al email ──
+  const displayLabel = username || user?.email?.split("@")[0] || "";
 
   const handleSignOut = async () => {
     try {
@@ -69,7 +68,7 @@ function PublicHeader({
               <p
                 className={`text-sm uppercase tracking-[0.3em] ${isDark ? "text-pink-300" : "text-pink-600"}`}
               >
-                Alta pinta
+                Nova Wear
               </p>
               <h1 className="text-xl font-semibold">Moda para todos</h1>
             </div>

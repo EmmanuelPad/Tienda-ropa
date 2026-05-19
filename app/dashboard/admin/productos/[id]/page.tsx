@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useState, FormEvent, useEffect, useRef, useCallback } from "react";
 import { useRequireRole } from "@/lib/useRequireRole";
 import AdminHeader from "@/components/layout/AdminHeader";
@@ -12,9 +12,24 @@ interface Category {
   description: string;
 }
 
-export default function NuevoProductoPage() {
+interface ProductData {
+  id: string;
+  name: string;
+  categories: string[];
+  price: number;
+  stock: number;
+  description: string;
+  imageUrl?: string;
+  publicId?: string;
+}
+
+export default function EditarProductoPage() {
   const router = useRouter();
+  const { id } = useParams<{ id: string }>();
   const { loading: roleLoading, isAdmin } = useRequireRole("admin");
+
+  const [producto, setProducto] = useState<ProductData | null>(null);
+  const [loadingProduct, setLoadingProduct] = useState(true);
 
   const [categorias, setCategorias] = useState<Category[]>([]);
   const [seleccionadas, setSeleccionadas] = useState<string[]>([]);
@@ -38,9 +53,46 @@ export default function NuevoProductoPage() {
   const [guardandoCat, setGuardandoCat] = useState(false);
   const [errorCat, setErrorCat] = useState("");
 
+  // ── Valores del formulario (controlados) ──
+  const [nombre, setNombre] = useState("");
+  const [precio, setPrecio] = useState("");
+  const [stock, setStock] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+
   useEffect(() => {
-    if (!roleLoading && isAdmin) fetchCategorias();
+    if (!roleLoading && isAdmin) {
+      fetchCategorias();
+      fetchProducto();
+    }
   }, [roleLoading, isAdmin]);
+
+  async function fetchProducto() {
+    setLoadingProduct(true);
+    try {
+      const res = await fetch(`/api/products/${id}`);
+      const data = await res.json();
+      if (data.ok) {
+        const p: ProductData = data.data;
+        setProducto(p);
+        setNombre(p.name);
+        setPrecio(String(p.price));
+        setStock(String(p.stock));
+        setDescripcion(p.description ?? "");
+        setSeleccionadas(p.categories ?? []);
+        if (p.imageUrl) {
+          setImagePreview(p.imageUrl);
+          setUploadedUrl(p.imageUrl);
+          setUploadedPublicId(p.publicId ?? "");
+        }
+      } else {
+        setError(data.error || "No se pudo cargar el producto");
+      }
+    } catch {
+      setError("Error de conexión al cargar el producto");
+    } finally {
+      setLoadingProduct(false);
+    }
+  }
 
   async function fetchCategorias() {
     setLoadingCats(true);
@@ -56,9 +108,9 @@ export default function NuevoProductoPage() {
     }
   }
 
-  const toggleCategoria = (id: string) =>
+  const toggleCategoria = (catId: string) =>
     setSeleccionadas((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
+      prev.includes(catId) ? prev.filter((c) => c !== catId) : [...prev, catId],
     );
 
   // ── Manejo de imagen ──
@@ -73,7 +125,6 @@ export default function NuevoProductoPage() {
     }
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
-    // Limpiar URL previa si el usuario cambia la imagen
     setUploadedUrl("");
     setUploadedPublicId("");
   }, []);
@@ -93,7 +144,6 @@ export default function NuevoProductoPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // Sube la imagen a Cloudinary y devuelve la URL
   async function uploadImage(): Promise<{
     url: string;
     publicId: string;
@@ -155,9 +205,7 @@ export default function NuevoProductoPage() {
     }
 
     setIsSaving(true);
-
     try {
-      // 1. Subir imagen si hay una seleccionada
       let imgUrl = uploadedUrl;
       let imgPubId = uploadedPublicId;
 
@@ -171,43 +219,43 @@ export default function NuevoProductoPage() {
         imgPubId = uploaded.publicId;
       }
 
-      // 2. Crear el producto
-      const formData = new FormData(event.currentTarget);
-      const product = {
-        name: String(formData.get("nombre") ?? "").trim(),
-        categories: seleccionadas,
-        price: Number(formData.get("precio") ?? 0),
-        stock: Number(formData.get("stock") ?? 0),
-        description: String(formData.get("descripcion") ?? "").trim(),
-        imageUrl: imgUrl,
-        publicId: imgPubId,
-      };
-
-      const response = await fetch("/api/products", {
-        method: "POST",
+      const response = await fetch(`/api/products/${id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(product),
+        body: JSON.stringify({
+          name: nombre.trim(),
+          categories: seleccionadas,
+          price: Number(precio),
+          stock: Number(stock),
+          description: descripcion.trim(),
+          imageUrl: imgUrl,
+          publicId: imgPubId,
+        }),
       });
 
       if (!response.ok) {
         const body = await response.json();
-        throw new Error(body.error || "Error al registrar el producto.");
+        throw new Error(body.error || "Error al actualizar el producto.");
       }
 
-      router.push("/dashboard");
+      router.push("/dashboard/admin/productos");
       router.refresh();
     } catch (err: unknown) {
       setError(
-        err instanceof Error ? err.message : "Error al registrar el producto.",
+        err instanceof Error ? err.message : "Error al actualizar el producto.",
       );
     } finally {
       setIsSaving(false);
     }
   }
 
-  if (roleLoading) {
+  const inputClass =
+    "w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-400";
+
+  if (roleLoading || loadingProduct) {
     return (
       <main className="min-h-screen bg-slate-950 text-white">
+        <AdminHeader />
         <div className="flex items-center justify-center py-20">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
         </div>
@@ -215,8 +263,22 @@ export default function NuevoProductoPage() {
     );
   }
 
-  const inputClass =
-    "w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-400";
+  if (!producto) {
+    return (
+      <main className="min-h-screen bg-slate-950 text-white">
+        <AdminHeader />
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <p className="text-slate-400">Producto no encontrado.</p>
+          <button
+            onClick={() => router.back()}
+            className="rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
+          >
+            Volver
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
@@ -227,10 +289,10 @@ export default function NuevoProductoPage() {
         <div className="mb-8">
           <p className="text-sm font-medium text-emerald-400">Productos</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight">
-            Nuevo producto
+            Editar producto
           </h1>
           <p className="mt-2 text-sm text-slate-400">
-            Completa el formulario para registrar un producto en el sistema.
+            Modifica los datos del producto y guarda los cambios.
           </p>
         </div>
 
@@ -255,7 +317,6 @@ export default function NuevoProductoPage() {
               </label>
 
               {imagePreview ? (
-                /* Vista previa */
                 <div className="relative w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-800">
                   <div className="relative h-64 w-full">
                     <Image
@@ -265,7 +326,6 @@ export default function NuevoProductoPage() {
                       className="object-contain p-2"
                     />
                   </div>
-                  {/* Acciones sobre la imagen */}
                   <div className="flex items-center justify-between border-t border-slate-700 px-4 py-3">
                     <div className="flex items-center gap-2 text-sm text-slate-400">
                       <svg
@@ -282,11 +342,7 @@ export default function NuevoProductoPage() {
                         />
                       </svg>
                       <span className="truncate max-w-50">
-                        {imageFile?.name}
-                      </span>
-                      <span className="text-slate-500">
-                        ({imageFile ? (imageFile.size / 1024).toFixed(0) : 0}{" "}
-                        KB)
+                        {imageFile?.name ?? "Imagen actual"}
                       </span>
                     </div>
                     <div className="flex gap-2">
@@ -308,7 +364,6 @@ export default function NuevoProductoPage() {
                   </div>
                 </div>
               ) : (
-                /* Zona de drop */
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => {
@@ -355,7 +410,6 @@ export default function NuevoProductoPage() {
                 </div>
               )}
 
-              {/* Input oculto */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -381,6 +435,8 @@ export default function NuevoProductoPage() {
                 name="nombre"
                 type="text"
                 required
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
                 placeholder="Ej. Camisa casual azul"
                 className={inputClass}
               />
@@ -494,6 +550,8 @@ export default function NuevoProductoPage() {
                   min="0.01"
                   step="0.01"
                   required
+                  value={precio}
+                  onChange={(e) => setPrecio(e.target.value)}
                   placeholder="0.00"
                   className={inputClass}
                 />
@@ -511,6 +569,8 @@ export default function NuevoProductoPage() {
                   type="number"
                   min="0"
                   required
+                  value={stock}
+                  onChange={(e) => setStock(e.target.value)}
                   placeholder="0"
                   className={inputClass}
                 />
@@ -529,6 +589,8 @@ export default function NuevoProductoPage() {
                 id="descripcion"
                 name="descripcion"
                 rows={4}
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
                 placeholder="Describe el producto..."
                 className={`${inputClass} resize-none`}
               />
@@ -560,7 +622,7 @@ export default function NuevoProductoPage() {
                   Guardando...
                 </span>
               ) : (
-                "Crear producto"
+                "Guardar cambios"
               )}
             </button>
           </div>

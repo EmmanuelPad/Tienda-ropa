@@ -9,11 +9,6 @@ import { auth } from "@/lib/firebase-client";
 import { useCart } from "@/lib/CartContext";
 import Link from "next/link";
 
-interface User {
-  email?: string | null;
-  uid: string;
-}
-
 interface Category {
   id: string;
   name: string;
@@ -29,7 +24,6 @@ interface Product {
 }
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
 
@@ -46,7 +40,6 @@ export default function DashboardPage() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        setUser({ email: firebaseUser.email, uid: firebaseUser.uid });
         try {
           const res = await fetch(`/api/user/role?uid=${firebaseUser.uid}`);
           const data = await res.json();
@@ -55,7 +48,6 @@ export default function DashboardPage() {
           setIsAdmin(false);
         }
       } else {
-        setUser(null);
         setIsAdmin(false);
       }
       setAuthLoading(false);
@@ -95,7 +87,8 @@ export default function DashboardPage() {
     .filter((p) => {
       if (filtroActivo === "Todos") return true;
       return p.idcategories?.some(
-        (id) => getCategoryName(id).toLowerCase() === filtroActivo.toLowerCase()
+        (id) =>
+          getCategoryName(id).toLowerCase() === filtroActivo.toLowerCase(),
       );
     })
     .sort((a, b) => {
@@ -115,7 +108,7 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      {isAdmin ? <AdminHeader user={user} /> : <PublicHeader />}
+      {isAdmin ? <AdminHeader /> : <PublicHeader />}
 
       {/* Panel carrito (solo usuarios normales) */}
       {!isAdmin && <CartSidebar />}
@@ -123,7 +116,9 @@ export default function DashboardPage() {
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         {/* Encabezado */}
         <div className="mb-12 text-center">
-          <p className="text-sm uppercase tracking-[0.35em] text-pink-300">Nuestra colección</p>
+          <p className="text-sm uppercase tracking-[0.35em] text-pink-300">
+            Nuestra colección
+          </p>
           <h1 className="mt-4 text-4xl font-bold sm:text-5xl">Productos</h1>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-300">
             Descubre prendas de calidad con estilo único.
@@ -137,9 +132,18 @@ export default function DashboardPage() {
                   bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-400
                   transition hover:bg-emerald-500/30"
               >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M12 4v16m8-8H4" />
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
                 </svg>
                 Administrar Productos
               </Link>
@@ -154,9 +158,10 @@ export default function DashboardPage() {
             <button
               onClick={() => setFiltroActivo("Todos")}
               className={`rounded-full border px-4 py-2 text-sm transition
-                ${filtroActivo === "Todos"
-                  ? "border-pink-400/50 bg-pink-500/20 text-pink-100"
-                  : "border-slate-700 bg-slate-800/50 text-slate-300 hover:border-pink-400/30 hover:bg-pink-500/10 hover:text-pink-100"
+                ${
+                  filtroActivo === "Todos"
+                    ? "border-pink-400/50 bg-pink-500/20 text-pink-100"
+                    : "border-slate-700 bg-slate-800/50 text-slate-300 hover:border-pink-400/30 hover:bg-pink-500/10 hover:text-pink-100"
                 }`}
             >
               Todos
@@ -168,9 +173,10 @@ export default function DashboardPage() {
                 key={cat.id}
                 onClick={() => setFiltroActivo(cat.name)}
                 className={`rounded-full border px-4 py-2 text-sm transition
-                  ${filtroActivo === cat.name
-                    ? "border-pink-400/50 bg-pink-500/20 text-pink-100"
-                    : "border-slate-700 bg-slate-800/50 text-slate-300 hover:border-pink-400/30 hover:bg-pink-500/10 hover:text-pink-100"
+                  ${
+                    filtroActivo === cat.name
+                      ? "border-pink-400/50 bg-pink-500/20 text-pink-100"
+                      : "border-slate-700 bg-slate-800/50 text-slate-300 hover:border-pink-400/30 hover:bg-pink-500/10 hover:text-pink-100"
                   }`}
               >
                 {cat.name}
@@ -200,7 +206,9 @@ export default function DashboardPage() {
           </div>
         ) : productosFiltrados.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
-            <p className="text-slate-400 text-lg">No hay productos disponibles.</p>
+            <p className="text-slate-400 text-lg">
+              No hay productos disponibles.
+            </p>
             {isAdmin && (
               <Link
                 href="/dashboard/admin/productos/nuevo"
@@ -246,8 +254,12 @@ export default function DashboardPage() {
                   </p>
 
                   {/* Stock */}
-                  <p className={`mb-3 text-xs font-medium ${producto.stock > 0 ? "text-emerald-400" : "text-red-400"}`}>
-                    {producto.stock > 0 ? `${producto.stock} disponibles` : "Sin stock"}
+                  <p
+                    className={`mb-3 text-xs font-medium ${producto.stock > 0 ? "text-emerald-400" : "text-red-400"}`}
+                  >
+                    {producto.stock > 0
+                      ? `${producto.stock} disponibles`
+                      : "Sin stock"}
                   </p>
 
                   <div className="flex items-center justify-between">
@@ -282,7 +294,10 @@ export default function DashboardPage() {
 
         <div className="mt-16 text-center">
           <p className="text-slate-400">¿No encuentras lo que buscas?</p>
-          <a href="#contacto" className="mt-2 inline-block text-pink-300 transition hover:text-pink-200">
+          <a
+            href="#contacto"
+            className="mt-2 inline-block text-pink-300 transition hover:text-pink-200"
+          >
             Contáctanos para sugerencias personalizadas →
           </a>
         </div>
