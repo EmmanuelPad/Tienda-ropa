@@ -6,6 +6,7 @@ import Image from "next/image";
 import logo from "@/Imagenes/Logo.png";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme } from "next-themes";
+import { useCart } from "@/lib/CartContext";
 
 function PublicHeader({
   islogin = false,
@@ -16,6 +17,7 @@ function PublicHeader({
 }) {
   const { user, loading, signOut, isAdmin, username } = useAuth();
   const { resolvedTheme, setTheme } = useTheme();
+  const { openCart, totalItems } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -318,6 +320,7 @@ function PublicHeader({
           {/* ── Botón carrito (solo usuarios normales) ── */}
           {!isAdmin && (
             <button
+              onClick={openCart}
               className="relative inline-flex items-center gap-2 rounded-full bg-pink-500 px-4 py-2
                 text-sm font-semibold text-white transition hover:bg-pink-400 active:scale-95"
               aria-label="Abrir carrito"
@@ -336,6 +339,11 @@ function PublicHeader({
                 />
               </svg>
               <span>Carrito</span>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-[10px] font-bold text-pink-600">
+                  {totalItems}
+                </span>
+              )}
             </button>
           )}
         </div>

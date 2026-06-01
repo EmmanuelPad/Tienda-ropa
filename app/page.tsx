@@ -100,6 +100,8 @@ export default function Home() {
   const { resolvedTheme } = useTheme();
   const { addToCart } = useCart();
   const [mounted, setMounted] = useState(false);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const VISIBLE = 4;
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -113,7 +115,7 @@ export default function Home() {
       .then(async ([prodRes, catRes]) => {
         const prodData = await prodRes.json();
         const catData = await catRes.json();
-        if (prodData.ok) setProducts((prodData.data ?? []).slice(0, 8)); // máximo 8 en home
+        if (prodData.ok) setProducts((prodData.data ?? []).slice(0, 12)); // máximo 12 en home
         if (catData.ok) setCategories(catData.data ?? []);
       })
       .catch(() => {})
@@ -212,22 +214,67 @@ export default function Home() {
                   <p>No hay productos disponibles aún.</p>
                 </div>
               ) : (
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                  {products.map((p) => (
-                    <ProductCard
-                      key={p.id}
-                      product={p}
-                      getCategoryName={getCategoryName}
-                      onAgregar={() =>
-                        addToCart({
-                          id: p.id,
-                          name: p.name,
-                          price: p.price,
-                          description: p.description,
-                        })
-                      }
-                    />
-                  ))}
+                <div className="relative">
+                  {/* Botón anterior */}
+                  <button
+                    onClick={() => setCarouselIndex((i) => Math.max(0, i - VISIBLE))}
+                    disabled={carouselIndex === 0}
+                    className="absolute -left-4 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-gray-700 shadow-lg border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-white transition hover:bg-pink-50 dark:hover:bg-pink-900/30 disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Anterior"
+                  >
+                    ‹
+                  </button>
+
+                  {/* Carrusel */}
+                  <div className="overflow-hidden">
+                    <div
+                      className="flex gap-5 transition-transform duration-500 ease-in-out"
+                      style={{ transform: `translateX(calc(-${carouselIndex} * (100% / ${VISIBLE} + 5px / ${VISIBLE})))` }}
+                    >
+                      {products.map((p) => (
+                        <div key={p.id} className="w-[calc(25%-15px)] flex-shrink-0">
+                          <ProductCard
+                            product={p}
+                            getCategoryName={getCategoryName}
+                            onAgregar={() =>
+                              addToCart({
+                                id: p.id,
+                                name: p.name,
+                                price: p.price,
+                                description: p.description,
+                              })
+                            }
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Botón siguiente */}
+                  <button
+                    onClick={() => setCarouselIndex((i) => Math.min(products.length - VISIBLE, i + VISIBLE))}
+                    disabled={carouselIndex >= products.length - VISIBLE}
+                    className="absolute -right-4 top-1/2 z-10 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-gray-700 shadow-lg border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-white transition hover:bg-pink-50 dark:hover:bg-pink-900/30 disabled:opacity-30 disabled:cursor-not-allowed"
+                    aria-label="Siguiente"
+                  >
+                    ›
+                  </button>
+
+                  {/* Indicadores de página */}
+                  <div className="mt-6 flex justify-center gap-2">
+                    {Array.from({ length: Math.ceil(products.length / VISIBLE) }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCarouselIndex(i * VISIBLE)}
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          Math.floor(carouselIndex / VISIBLE) === i
+                            ? "w-6 bg-pink-500"
+                            : "w-2 bg-gray-300 dark:bg-gray-600 hover:bg-pink-300"
+                        }`}
+                        aria-label={`Página ${i + 1}`}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
 

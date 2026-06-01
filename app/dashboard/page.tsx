@@ -34,7 +34,7 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
-  const [filtroActivo, setFiltroActivo] = useState("Todos");
+  const [filtroActivo, setFiltroActivo] = useState<string>("Todos");
   const [orden, setOrden] = useState("nombre-az");
 
   const { addToCart } = useCart();
@@ -90,10 +90,7 @@ export default function DashboardPage() {
   const productosFiltrados = products
     .filter((p) => {
       if (filtroActivo === "Todos") return true;
-      return p.idcategories?.some(
-        (id) =>
-          getCategoryName(id).toLowerCase() === filtroActivo.toLowerCase(),
-      );
+      return p.idcategories?.includes(filtroActivo);
     })
     .sort((a, b) => {
       if (orden === "precio-asc") return a.price - b.price;
@@ -175,10 +172,10 @@ export default function DashboardPage() {
             {categories.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setFiltroActivo(cat.name)}
+                onClick={() => setFiltroActivo(cat.id)}
                 className={`rounded-full border px-4 py-2 text-sm transition
                   ${
-                    filtroActivo === cat.name
+                    filtroActivo === cat.id
                       ? "border-pink-400/50 bg-pink-500/20 text-pink-100"
                       : "border-slate-700 bg-slate-800/50 text-slate-300 hover:border-pink-400/30 hover:bg-pink-500/10 hover:text-pink-100"
                   }`}
