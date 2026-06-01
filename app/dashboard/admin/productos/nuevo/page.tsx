@@ -12,6 +12,14 @@ interface Category {
   description: string;
 }
 
+interface ImageItem {
+  id: string;
+  file?: File;
+  preview: string;
+  uploadedUrl?: string;
+  uploadedPublicId?: string;
+}
+
 export default function NuevoProductoPage() {
   const router = useRouter();
   const { loading: roleLoading, isAdmin } = useRequireRole("admin");
@@ -23,14 +31,107 @@ export default function NuevoProductoPage() {
   const [error, setError] = useState("");
 
   // ── Imagen ──
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [images, setImages] = useState<ImageItem[]>([]);
   const [uploadingImg, setUploadingImg] = useState(false);
-  const [uploadedUrl, setUploadedUrl] = useState("");
-  const [uploadedPublicId, setUploadedPublicId] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const addFiles = useCallback((files: File[]) => {
+    const validFiles: ImageItem[] = [];
+    for (const file of files) {
+      if (!file.type.startsWith("image/")) {
+        setError("Solo se permiten archivos de imagen.");
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError("La imagen no puede superar 5 MB.");
+        continue;
+      }
+      validFiles.push({
+        id: crypto.randomUUID(),
+        file,
+        preview: URL.createObjectURL(file),
+      });
+    }
+    if (validFiles.length) {
+      setImages((prev) => [...prev, ...validFiles]);
+    }
+  }, []);
+
+  const handleFilesChange = (fileList: FileList | null) => {
+    if (!fileList) return;
+    addFiles(Array.from(fileList));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (e.dataTransfer.files.length) {
+      addFiles(Array.from(e.dataTransfer.files));
+    }
+  };
+
+  const removeImage = (id: string) => {
+    setImages((prev) => {
+      const item = prev.find((image) => image.id === id);
+      if (item?.file) {
+        URL.revokeObjectURL(item.preview);
+      }
+      return prev.filter((image) => image.id !== id);
+    });
+  };
+
+  async function uploadImage(file: File): Promise<{
+    url: string;
+    publicId: string;
+  } | null> {
+    setUploadingImg(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.message || "Error al subir imagen");
+      return { url: data.url, publicId: data.publicId };
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al subir imagen");
+      return null;
+    } finally {
+      setUploadingImg(false);
+    }
+  }
+
+  async function uploadPendingImages(): Promise<{
+    imageUrls: string[];
+    publicIds: string[];
+  } | null> {
+    const nextImages = [...images];
+    const imageUrls: string[] = [];
+    const publicIds: string[] = [];
+
+    for (let i = 0; i < nextImages.length; i += 1) {
+      const item = nextImages[i];
+      if (item.uploadedUrl) {
+        imageUrls.push(item.uploadedUrl);
+        publicIds.push(item.uploadedPublicId ?? "");
+        continue;
+      }
+      if (!item.file) continue;
+      const uploaded = await uploadImage(item.file);
+      if (!uploaded) return null;
+      nextImages[i] = {
+        ...item,
+        uploadedUrl: uploaded.url,
+        uploadedPublicId: uploaded.publicId,
+      };
+      imageUrls.push(uploaded.url);
+      publicIds.push(uploaded.publicId);
+    }
+
+    setImages(nextImages);
+    return { imageUrls, publicIds };
+  }
 
   // ── Modal nueva categoría ──
   const [modalOpen, setModalOpen] = useState(false);
@@ -61,59 +162,6 @@ export default function NuevoProductoPage() {
     setSeleccionadas((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
     );
-
-  // ── Manejo de imagen ──
-  const handleImageChange = useCallback((file: File) => {
-    if (!file.type.startsWith("image/")) {
-      setError("Solo se permiten archivos de imagen.");
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError("La imagen no puede superar 5 MB.");
-      return;
-    }
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-    setUploadedUrl("");
-    setUploadedPublicId("");
-  }, []);
-
-  const handleFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) handleImageChange(file);
-  };
-
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview("");
-    setUploadedUrl("");
-    setUploadedPublicId("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  // Sube la imagen a Cloudinary y devuelve la URL
-  async function uploadImage(): Promise<{
-    url: string;
-    publicId: string;
-  } | null> {
-    if (!imageFile) return null;
-    setUploadingImg(true);
-    try {
-      const form = new FormData();
-      form.append("file", imageFile);
-      const res = await fetch("/api/upload", { method: "POST", body: form });
-      const data = await res.json();
-      if (!data.ok) throw new Error(data.message || "Error al subir imagen");
-      return { url: data.url, publicId: data.publicId };
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al subir imagen");
-      return null;
-    } finally {
-      setUploadingImg(false);
-    }
-  }
 
   async function handleCrearCategoria() {
     if (!nuevaNombre.trim()) return;
@@ -164,29 +212,31 @@ export default function NuevoProductoPage() {
     setIsSaving(true);
 
     try {
-      // 1. Subir imagen si hay una seleccionada
-      let imgUrl = uploadedUrl;
-      let imgPubId = uploadedPublicId;
+      let imageUrls = images
+        .map((item) => item.uploadedUrl ?? item.preview)
+        .filter((url) => Boolean(url)) as string[];
+      let publicIds = images
+        .map((item) => item.uploadedPublicId ?? "")
+        .filter((id) => Boolean(id));
 
-      if (imageFile && !uploadedUrl) {
-        const uploaded = await uploadImage();
+      if (images.some((item) => item.file && !item.uploadedUrl)) {
+        const uploaded = await uploadPendingImages();
         if (!uploaded) {
           setIsSaving(false);
           return;
         }
-        imgUrl = uploaded.url;
-        imgPubId = uploaded.publicId;
+        imageUrls = uploaded.imageUrls;
+        publicIds = uploaded.publicIds;
       }
 
-      // Crear el producto
       const product = {
         name: String(formData.get("nombre") ?? "").trim(),
         categories: seleccionadas,
         price: Number(formData.get("precio") ?? 0),
         stock: Number(formData.get("stock") ?? 0),
         description: String(formData.get("descripcion") ?? "").trim(),
-        imageUrl: imgUrl,
-        publicId: imgPubId,
+        imageUrls,
+        publicIds,
       };
 
       const response = await fetch("/api/products", {
@@ -259,56 +309,33 @@ export default function NuevoProductoPage() {
                 </span>
               </label>
 
-              {imagePreview ? (
-                <div className="relative w-full overflow-hidden rounded-xl border border-slate-700 bg-slate-800">
-                  <div className="relative h-64 w-full">
-                    <Image
-                      src={imagePreview}
-                      alt="Vista previa del producto"
-                      fill
-                      className="object-contain p-2"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between border-t border-slate-700 px-4 py-3">
-                    <div className="flex items-center gap-2 text-sm text-slate-400">
-                      <svg
-                        className="h-4 w-4 text-emerald-400"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              {images.length > 0 ? (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {images.map((image) => (
+                    <div
+                      key={image.id}
+                      className="relative overflow-hidden rounded-xl border border-slate-700 bg-slate-800"
+                    >
+                      <div className="relative h-40 w-full">
+                        <Image
+                          src={image.preview}
+                          alt="Vista previa del producto"
+                          fill
+                          className="object-contain p-2"
                         />
-                      </svg>
-                      <span className="truncate max-w-50">
-                        {imageFile?.name}
-                      </span>
-                      <span className="text-slate-500">
-                        ({imageFile ? (imageFile.size / 1024).toFixed(0) : 0}{" "}
-                        KB)
-                      </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 border-t border-slate-700 px-3 py-3 text-sm text-slate-300">
+                        <span className="truncate">{image.file?.name ?? "Imagen"}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeImage(image.id)}
+                          className="rounded-lg border border-red-500/40 px-2 py-1 text-xs text-red-400 hover:bg-red-500/10 transition"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="rounded-lg border border-slate-600 px-3 py-1.5 text-xs text-slate-300 hover:border-emerald-400 hover:text-emerald-400 transition"
-                      >
-                        Cambiar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={removeImage}
-                        className="rounded-lg border border-red-500/40 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/10 transition"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               ) : (
                 <div
@@ -344,15 +371,15 @@ export default function NuevoProductoPage() {
                   <div className="text-center">
                     <p className="text-sm font-medium text-slate-300">
                       {dragOver
-                        ? "Suelta la imagen aquí"
-                        : "Arrastra una imagen o haz clic para seleccionar"}
+                        ? "Suelta las imágenes aquí"
+                        : "Arrastra imágenes o haz clic para seleccionar"}
                     </p>
                     <p className="mt-1 text-xs text-slate-500">
-                      PNG, JPG, WEBP — máx. 5 MB
+                      PNG, JPG, WEBP — máx. 5 MB cada una
                     </p>
                   </div>
                   <span className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-1.5 text-xs font-semibold text-emerald-400">
-                    Seleccionar imagen
+                    Seleccionar imágenes
                   </span>
                 </div>
               )}
@@ -361,10 +388,10 @@ export default function NuevoProductoPage() {
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                multiple
                 className="hidden"
                 onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleImageChange(file);
+                  handleFilesChange(e.target.files);
                 }}
               />
             </div>

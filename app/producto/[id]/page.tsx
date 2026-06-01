@@ -19,6 +19,7 @@ interface Product {
   description: string;
   categories: string[];
   imageUrl?: string;
+  imageUrls?: string[];
 }
 
 export default function ProductoPage() {
@@ -118,18 +119,48 @@ export default function ProductoPage() {
 
         <div className="mt-8 grid gap-12 lg:grid-cols-2 lg:items-start">
           {/* ── Imagen ── */}
-          <div className="relative aspect-square overflow-hidden rounded-3xl bg-slate-800/50 shadow-xl">
-            {product.imageUrl ? (
-              <Image
-                src={product.imageUrl}
-                alt={product.name}
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover"
-                priority
-              />
+          <div className="space-y-4">
+            {product.imageUrls?.length ? (
+              <>
+                <div className="relative aspect-square overflow-hidden rounded-3xl bg-slate-800/50 shadow-xl">
+                  <Image
+                    src={product.imageUrls[0]}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                    className="object-cover"
+                    priority
+                  />
+                </div>
+                {product.imageUrls.length > 1 && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {product.imageUrls.slice(1, 5).map((url, index) => (
+                      <div key={url + index} className="relative aspect-square overflow-hidden rounded-3xl bg-slate-800/50 shadow-xl">
+                        <Image
+                          src={url}
+                          alt={`${product.name} ${index + 2}`}
+                          fill
+                          sizes="(max-width: 1024px) 100vw, 50vw"
+                          className="object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : product.imageUrl ? (
+              <div className="relative aspect-square overflow-hidden rounded-3xl bg-slate-800/50 shadow-xl">
+                <Image
+                  src={product.imageUrl}
+                  alt={product.name}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="object-cover"
+                  priority
+                />
+              </div>
             ) : (
-              <div className="flex h-full items-center justify-center text-9xl">
+              <div className="flex h-full items-center justify-center rounded-3xl bg-slate-800/50 text-9xl">
                 👕
               </div>
             )}

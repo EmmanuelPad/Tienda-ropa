@@ -5,8 +5,10 @@ export interface Product {
   price: number;
   stock: number;
   description: string;
-  imageUrl?: string;   // ← URL pública de Cloudinary
-  publicId?: string;   // ← ID en Cloudinary (para borrar/reemplazar)
+  imageUrl?: string;   // ← URL pública de Cloudinary (primera imagen)
+  publicId?: string;   // ← ID en Cloudinary (primera imagen)
+  imageUrls?: string[]; // ← URLs públicas de Cloudinary
+  publicIds?: string[]; // ← IDs en Cloudinary
   createdAt: string;
   updatedAt: string;
 }
@@ -19,4 +21,6 @@ export interface CreateProductInput {
   description: string;
   imageUrl?: string;
   publicId?: string;
+  imageUrls?: string[];
+  publicIds?: string[];
 }

@@ -25,8 +25,25 @@ export async function POST(request: NextRequest) {
     const price       = Number(body.price ?? 0);
     const stock       = Number(body.stock ?? 0);
     const description = String(body.description ?? "").trim();
+    const imageUrls   = Array.isArray(body.imageUrls)
+      ? body.imageUrls.map(String).filter(Boolean)
+      : [];
+    const publicIds   = Array.isArray(body.publicIds)
+      ? body.publicIds.map(String).filter(Boolean)
+      : [];
     const imageUrl    = String(body.imageUrl ?? "");
     const publicId    = String(body.publicId ?? "");
+
+    const finalImageUrls = imageUrls.length
+      ? imageUrls
+      : imageUrl
+      ? [imageUrl]
+      : [];
+    const finalPublicIds = publicIds.length
+      ? publicIds
+      : publicId
+      ? [publicId]
+      : [];
 
     if (!name) {
       return NextResponse.json(
@@ -59,8 +76,8 @@ export async function POST(request: NextRequest) {
       price,
       stock,
       description,
-      imageUrl,
-      publicId,
+      imageUrls: finalImageUrls,
+      publicIds: finalPublicIds,
     });
 
     return NextResponse.json({ ok: true, data: product }, { status: 201 });

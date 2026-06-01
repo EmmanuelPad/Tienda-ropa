@@ -8,6 +8,18 @@ export async function createProduct(
   input: CreateProductInput,
 ): Promise<Product> {
   const now = Timestamp.now();
+  const imageUrls =
+    input.imageUrls?.length
+      ? input.imageUrls
+      : input.imageUrl
+      ? [input.imageUrl]
+      : [];
+  const publicIds =
+    input.publicIds?.length
+      ? input.publicIds
+      : input.publicId
+      ? [input.publicId]
+      : [];
 
   const productData = {
     name: input.name,
@@ -15,8 +27,10 @@ export async function createProduct(
     price: input.price,
     stock: input.stock,
     description: input.description,
-    imageUrl: input.imageUrl ?? "",
-    publicId: input.publicId ?? "",
+    imageUrl: imageUrls[0] ?? "",
+    publicId: publicIds[0] ?? "",
+    imageUrls,
+    publicIds,
     createdAt: now,
     updatedAt: now,
   };
@@ -32,6 +46,8 @@ export async function createProduct(
     description: productData.description,
     imageUrl: productData.imageUrl,
     publicId: productData.publicId,
+    imageUrls: productData.imageUrls,
+    publicIds: productData.publicIds,
     createdAt: now.toDate().toISOString(),
     updatedAt: now.toDate().toISOString(),
   };
@@ -45,6 +61,17 @@ export async function getProduct(): Promise<Product[]> {
 
   return snapshot.docs.map((doc) => {
     const data = doc.data();
+    const imageUrls = Array.isArray(data.imageUrls)
+      ? data.imageUrls.map(String)
+      : data.imageUrl
+      ? [String(data.imageUrl)]
+      : [];
+    const publicIds = Array.isArray(data.publicIds)
+      ? data.publicIds.map(String)
+      : data.publicId
+      ? [String(data.publicId)]
+      : [];
+
     return {
       id: doc.id,
       name: String(data.name ?? ""),
@@ -54,8 +81,10 @@ export async function getProduct(): Promise<Product[]> {
       price: Number(data.price ?? 0),
       stock: Number(data.stock ?? 0),
       description: String(data.description ?? ""),
-      imageUrl: String(data.imageUrl ?? ""),
-      publicId: String(data.publicId ?? ""),
+      imageUrl: imageUrls[0] ?? String(data.imageUrl ?? ""),
+      publicId: publicIds[0] ?? String(data.publicId ?? ""),
+      imageUrls,
+      publicIds,
       createdAt: data.createdAt?.toDate?.().toISOString(),
       updatedAt: data.updatedAt?.toDate?.().toISOString(),
     };
@@ -66,6 +95,17 @@ export async function getProductById(id: string): Promise<Product | null> {
   const doc = await adminDb.collection(COLLECTION_NAME).doc(id).get();
   if (!doc.exists) return null;
   const data = doc.data()!;
+  const imageUrls = Array.isArray(data.imageUrls)
+    ? data.imageUrls.map(String)
+    : data.imageUrl
+    ? [String(data.imageUrl)]
+    : [];
+  const publicIds = Array.isArray(data.publicIds)
+    ? data.publicIds.map(String)
+    : data.publicId
+    ? [String(data.publicId)]
+    : [];
+
   return {
     id: doc.id,
     name: String(data.name ?? ""),
@@ -75,8 +115,10 @@ export async function getProductById(id: string): Promise<Product | null> {
     price: Number(data.price ?? 0),
     stock: Number(data.stock ?? 0),
     description: String(data.description ?? ""),
-    imageUrl: String(data.imageUrl ?? ""),
-    publicId: String(data.publicId ?? ""),
+    imageUrl: imageUrls[0] ?? String(data.imageUrl ?? ""),
+    publicId: publicIds[0] ?? String(data.publicId ?? ""),
+    imageUrls,
+    publicIds,
     createdAt: data.createdAt?.toDate?.().toISOString(),
     updatedAt: data.updatedAt?.toDate?.().toISOString(),
   };

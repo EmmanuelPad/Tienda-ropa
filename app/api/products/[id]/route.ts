@@ -45,8 +45,25 @@ export async function PUT(
     const price = Number(body.price ?? 0);
     const stock = Number(body.stock ?? 0);
     const description = String(body.description ?? "").trim();
+    const imageUrls = Array.isArray(body.imageUrls)
+      ? body.imageUrls.map(String).filter(Boolean)
+      : [];
+    const publicIds = Array.isArray(body.publicIds)
+      ? body.publicIds.map(String).filter(Boolean)
+      : [];
     const imageUrl = String(body.imageUrl ?? "");
     const publicId = String(body.publicId ?? "");
+
+    const finalImageUrls = imageUrls.length
+      ? imageUrls
+      : imageUrl
+      ? [imageUrl]
+      : [];
+    const finalPublicIds = publicIds.length
+      ? publicIds
+      : publicId
+      ? [publicId]
+      : [];
 
     if (!name) {
       return NextResponse.json(
@@ -79,14 +96,8 @@ export async function PUT(
       price,
       stock,
       description,
-      imageUrl,
-      publicId,
-    });
-
-    return NextResponse.json({ ok: true, data: updated });
-  } catch (error) {
-    console.error("Error actualizando producto:", error);
-    return NextResponse.json(
+        imageUrls: finalImageUrls,
+        publicIds: finalPublicIds,
       { ok: false, error: "Error al actualizar el producto" },
       { status: 500 },
     );
