@@ -96,8 +96,14 @@ export async function PUT(
       price,
       stock,
       description,
-        imageUrls: finalImageUrls,
-        publicIds: finalPublicIds,
+      imageUrls: finalImageUrls,
+      publicIds: finalPublicIds,
+    });
+
+    return NextResponse.json({ ok: true, data: updated });
+  } catch (error) {
+    console.error("Error actualizando producto:", error);
+    return NextResponse.json(
       { ok: false, error: "Error al actualizar el producto" },
       { status: 500 },
     );
