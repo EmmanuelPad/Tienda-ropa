@@ -22,7 +22,7 @@ interface Product {
   price: number;
   stock: number;
   description: string;
-  idcategories: string[];
+  categories: string[];
   imageUrl?: string;
 }
 
@@ -90,7 +90,7 @@ export default function DashboardPage() {
   const productosFiltrados = products
     .filter((p) => {
       if (filtroActivo === "Todos") return true;
-      return p.idcategories?.includes(filtroActivo);
+      return p.categories?.includes(filtroActivo);
     })
     .sort((a, b) => {
       if (orden === "precio-asc") return a.price - b.price;
@@ -249,7 +249,7 @@ export default function DashboardPage() {
                 <div className="p-5">
                   {/* Categorías */}
                   <div className="mb-2 flex flex-wrap gap-1">
-                    {producto.idcategories?.map((catId) => (
+                    {producto.categories?.map((catId) => (
                       <span
                         key={catId}
                         className="inline-block rounded-full bg-pink-500/20 px-2 py-0.5
