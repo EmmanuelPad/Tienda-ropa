@@ -15,10 +15,18 @@ function parseReviews(value: unknown): Review[] {
     .map((item) => {
       if (typeof item !== "object" || item === null) return null;
       const raw = item as Record<string, unknown>;
-      const createdAt =
-        typeof raw.createdAt === "string"
-          ? raw.createdAt
-          : raw.createdAt?.toDate?.()?.toISOString?.() ?? "";
+      let createdAt = "";
+      if (typeof raw.createdAt === "string") {
+        createdAt = raw.createdAt;
+      } else if (
+        raw.createdAt &&
+        typeof raw.createdAt === "object" &&
+        "toDate" in raw.createdAt &&
+        typeof (raw.createdAt as { toDate?: unknown }).toDate === "function"
+      ) {
+        createdAt = (raw.createdAt as { toDate: () => Date }).toDate().toISOString();
+      }
+
       return {
         id: String(raw.id ?? ""),
         userId: String(raw.userId ?? ""),
