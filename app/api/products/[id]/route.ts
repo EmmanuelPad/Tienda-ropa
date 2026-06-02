@@ -51,19 +51,12 @@ export async function PUT(
     const publicIds = Array.isArray(body.publicIds)
       ? body.publicIds.map(String).filter(Boolean)
       : [];
-    const imageUrl = String(body.imageUrl ?? "");
-    const publicId = String(body.publicId ?? "");
+   
 
     const finalImageUrls = imageUrls.length
-      ? imageUrls
-      : imageUrl
-      ? [imageUrl]
-      : [];
+      ? imageUrls: [];
     const finalPublicIds = publicIds.length
-      ? publicIds
-      : publicId
-      ? [publicId]
-      : [];
+      ? publicIds: [];
 
     if (!name) {
       return NextResponse.json(
