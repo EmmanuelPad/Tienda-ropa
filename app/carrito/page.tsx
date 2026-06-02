@@ -21,7 +21,9 @@ export default function CarritoPage() {
   } = useCart();
   const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
-  const [checkoutDone, setCheckoutDone] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [checkoutCanceled, setCheckoutCanceled] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -41,12 +43,44 @@ export default function CarritoPage() {
     return () => unsub();
   }, []);
 
+  useEffect(() => {
+    const searchParams = new URL(window.location.href).searchParams;
+    setCheckoutSuccess(searchParams.get("success") === "1");
+    setCheckoutCanceled(searchParams.get("canceled") === "1");
+  }, []);
+
   const envio = 0;
   const total = subtotal + envio;
 
-  const handleCheckout = () => {
-    clearCart();
-    setCheckoutDone(true);
+  const handleCheckout = async () => {
+    if (items.length === 0 || checkoutLoading) return;
+    setCheckoutLoading(true);
+
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ items }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "No se pudo iniciar el pago.");
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error(error);
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : "Error al procesar el pago. Intenta de nuevo."
+      );
+    } finally {
+      setCheckoutLoading(false);
+    }
   };
 
   if (authLoading) {
@@ -58,7 +92,7 @@ export default function CarritoPage() {
   }
 
   /* ── Confirmación de compra ── */
-  if (checkoutDone) {
+  if (checkoutSuccess) {
     return (
       <main className="min-h-screen bg-slate-950 text-white">
         {isAdmin ? <AdminHeader /> : <PublicHeader />}
@@ -66,9 +100,9 @@ export default function CarritoPage() {
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/20 text-5xl">
             ✓
           </div>
-          <h1 className="text-3xl font-bold text-white">¡Pedido realizado!</h1>
+          <h1 className="text-3xl font-bold text-white">Pago completado</h1>
           <p className="text-slate-400">
-            Gracias por tu compra. Recibirás una confirmación pronto.
+            Gracias por tu compra. Tu pago se ha procesado correctamente.
           </p>
           <Link
             href="/dashboard"
@@ -76,6 +110,30 @@ export default function CarritoPage() {
               shadow-lg shadow-pink-500/30 transition hover:bg-pink-400"
           >
             Seguir comprando
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (checkoutCanceled) {
+    return (
+      <main className="min-h-screen bg-slate-950 text-white">
+        {isAdmin ? <AdminHeader /> : <PublicHeader />}
+        <div className="mx-auto flex max-w-lg flex-col items-center gap-6 px-4 py-32 text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-yellow-500/20 text-5xl">
+            ⚠️
+          </div>
+          <h1 className="text-3xl font-bold text-white">Pago cancelado</h1>
+          <p className="text-slate-400">
+            No se completó el pago. Puedes intentar de nuevo cuando quieras.
+          </p>
+          <Link
+            href="/carrito"
+            className="rounded-full bg-pink-500 px-8 py-3 font-semibold text-white
+              shadow-lg shadow-pink-500/30 transition hover:bg-pink-400"
+          >
+            Volver al carrito
           </Link>
         </div>
       </main>
@@ -269,10 +327,12 @@ export default function CarritoPage() {
 
               <button
                 onClick={handleCheckout}
+                disabled={checkoutLoading || items.length === 0}
                 className="mt-6 w-full rounded-2xl bg-pink-500 py-4 font-bold text-white
-                  shadow-lg shadow-pink-500/30 transition hover:bg-pink-400 active:scale-[0.98]"
+                  shadow-lg shadow-pink-500/30 transition hover:bg-pink-400 active:scale-[0.98]
+                  disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
               >
-                Proceder al pago →
+                {checkoutLoading ? "Redirigiendo a Stripe..." : "Proceder al pago →"}
               </button>
 
               <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-500">
