@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { useCart } from "@/lib/CartContext";
@@ -23,7 +22,6 @@ export default function CarritoPage() {
   const [authLoading, setAuthLoading] = useState(true);
   const [checkoutDone, setCheckoutDone] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -44,11 +42,13 @@ export default function CarritoPage() {
   }, []);
 
   useEffect(() => {
-    if (searchParams.get("success") === "true") {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("success") === "true") {
       clearCart();
       setCheckoutDone(true);
     }
-  }, [searchParams, clearCart]);
+  }, [clearCart]);
 
   const envio = 0;
   const total = subtotal + envio;
