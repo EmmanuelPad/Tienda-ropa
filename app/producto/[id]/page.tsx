@@ -4,12 +4,21 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { useCart } from "@/lib/CartContext";
 import PublicHeader from "@/components/layout/PublicHeader";
 import AdminHeader from "@/components/layout/AdminHeader";
 import CartSidebar from "@/components/layout/CartSidebar";
+
+interface Review {
+  id: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
 
 interface Product {
   id: string;
@@ -20,6 +29,9 @@ interface Product {
   categories: string[];
   imageUrl?: string;
   imageUrls?: string[];
+  rating?: number;
+  reviewCount?: number;
+  reviews?: Review[];
 }
 
 export default function ProductoPage() {
@@ -30,14 +42,21 @@ export default function ProductoPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewError, setReviewError] = useState("");
+  const [reviewSuccess, setReviewSuccess] = useState("");
+  const [reviewLoading, setReviewLoading] = useState(false);
 
   const { addToCart } = useCart();
 
   /* ── Auth ── */
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
+      setUser(user);
       if (user) {
         try {
           const res = await fetch(`/api/user/role?uid=${user.uid}`);
@@ -78,6 +97,56 @@ export default function ProductoPage() {
     }
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+  };
+
+  const handleSubmitReview = async () => {
+    if (!user) {
+      setReviewError("Debes iniciar sesión para dejar una opinión.");
+      return;
+    }
+    if (reviewRating < 1 || reviewRating > 5) {
+      setReviewError("Selecciona una calificación entre 1 y 5 estrellas.");
+      return;
+    }
+    if (!reviewComment.trim()) {
+      setReviewError("Escribe tu opinión antes de enviar.");
+      return;
+    }
+
+    setReviewLoading(true);
+    setReviewError("");
+    setReviewSuccess("");
+
+    try {
+      const response = await fetch(`/api/products/${id}/review`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: user.uid,
+          userName: user.displayName ?? user.email ?? "Cliente",
+          rating: reviewRating,
+          comment: reviewComment.trim(),
+        }),
+      });
+      const data = await response.json();
+      if (!data.ok) {
+        throw new Error(data.error || "No se pudo enviar la opinión.");
+      }
+      setProduct(data.data);
+      setReviewRating(5);
+      setReviewComment("");
+      setReviewSuccess("Gracias por tu opinión. Se ha enviado con éxito.");
+    } catch (error) {
+      setReviewError(
+        error instanceof Error
+          ? error.message
+          : "Error al enviar la opinión. Intenta de nuevo.",
+      );
+    } finally {
+      setReviewLoading(false);
+    }
   };
 
   if (loading) {
@@ -210,6 +279,118 @@ export default function ProductoPage() {
               <p className="leading-relaxed text-slate-300">
                 {product.description || "Sin descripción."}
               </p>
+            </div>
+
+            {/* ── Calificación y opiniones ── */}
+            <div className="rounded-2xl border border-white/5 bg-white/5 p-5">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+                    Calificación del producto
+                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="flex items-center gap-1 text-pink-400">
+                      {Array.from({ length: 5 }).map((_, index) => {
+                        const value = index + 1;
+                        return (
+                          <span key={value}>
+                            {value <= Math.round(product.rating ?? 0) ? "★" : "☆"}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <span className="text-sm text-slate-400">
+                      {product.reviewCount
+                        ? `${product.rating?.toFixed(1)} · ${product.reviewCount} opinión${product.reviewCount === 1 ? "" : "es"}`
+                        : "Sin calificaciones aún"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="divide-y divide-white/5">
+                <div className="pb-5">
+                  <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-slate-500">
+                    Dejar opinión
+                  </p>
+                  {reviewError && (
+                    <div className="mb-3 rounded-xl bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                      {reviewError}
+                    </div>
+                  )}
+                  {reviewSuccess && (
+                    <div className="mb-3 rounded-xl bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+                      {reviewSuccess}
+                    </div>
+                  )}
+                  <div className="mb-3 flex items-center gap-2 text-sm text-slate-200">
+                    {Array.from({ length: 5 }).map((_, index) => {
+                      const value = index + 1;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setReviewRating(value)}
+                          className={`text-2xl transition ${
+                            value <= reviewRating ? "text-pink-400" : "text-slate-600"
+                          }`}
+                        >
+                          ★
+                        </button>
+                      );
+                    })}
+                    <span className="text-slate-400">{reviewRating} / 5</span>
+                  </div>
+                  <textarea
+                    value={reviewComment}
+                    onChange={(event) => setReviewComment(event.target.value)}
+                    rows={4}
+                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 p-4 text-sm text-white outline-none focus:border-pink-400"
+                    placeholder="Escribe tu opinión sobre el producto..."
+                  />
+                  <div className="mt-4 flex items-center justify-between gap-4">
+                    <button
+                      type="button"
+                      onClick={handleSubmitReview}
+                      disabled={reviewLoading}
+                      className="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-pink-400 disabled:opacity-40"
+                    >
+                      {reviewLoading ? "Enviando opinión..." : "Enviar opinión"}
+                    </button>
+                    {!user && (
+                      <p className="text-sm text-slate-500">
+                        Inicia sesión para dejar tu opinión.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-5">
+                  <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-500">
+                    Opiniones de clientes
+                  </p>
+                  {product.reviews?.length ? (
+                    <div className="space-y-4">
+                      {product.reviews.map((review) => (
+                        <div key={review.id} className="rounded-2xl border border-slate-700 bg-slate-950 p-4">
+                          <div className="mb-2 flex items-center justify-between gap-3 text-sm text-slate-300">
+                            <span>{review.userName}</span>
+                            <span className="text-pink-400">{review.rating} ★</span>
+                          </div>
+                          <p className="text-sm leading-relaxed text-slate-300">
+                            {review.comment}
+                          </p>
+                          <p className="mt-3 text-xs text-slate-500">
+                            {new Date(review.createdAt).toLocaleDateString("es-MX")}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400">Aún no hay opiniones para este producto.</p>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* ── Acciones usuario ── */}

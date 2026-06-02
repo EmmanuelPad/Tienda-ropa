@@ -1,8 +1,35 @@
 import { Timestamp } from "firebase-admin/firestore";
 import { adminDb } from "../firebase-admin";
-import { CreateProductInput, Product } from "./product";
+import {
+  AddProductReviewInput,
+  CreateProductInput,
+  Product,
+  Review,
+} from "./product";
 
 const COLLECTION_NAME = "products";
+
+function parseReviews(value: unknown): Review[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => {
+      if (typeof item !== "object" || item === null) return null;
+      const raw = item as Record<string, unknown>;
+      const createdAt =
+        typeof raw.createdAt === "string"
+          ? raw.createdAt
+          : raw.createdAt?.toDate?.()?.toISOString?.() ?? "";
+      return {
+        id: String(raw.id ?? ""),
+        userId: String(raw.userId ?? ""),
+        userName: String(raw.userName ?? ""),
+        rating: Number(raw.rating ?? 0),
+        comment: String(raw.comment ?? ""),
+        createdAt,
+      };
+    })
+    .filter((review): review is Review => review !== null);
+}
 
 export async function createProduct(
   input: CreateProductInput,
@@ -31,6 +58,9 @@ export async function createProduct(
     publicId: publicIds[0] ?? "",
     imageUrls,
     publicIds,
+    rating: input.rating ?? 0,
+    reviewCount: input.reviewCount ?? 0,
+    reviews: input.reviews ?? [],
     createdAt: now,
     updatedAt: now,
   };
@@ -48,6 +78,9 @@ export async function createProduct(
     publicId: productData.publicId,
     imageUrls: productData.imageUrls,
     publicIds: productData.publicIds,
+    rating: productData.rating,
+    reviewCount: productData.reviewCount,
+    reviews: productData.reviews,
     createdAt: now.toDate().toISOString(),
     updatedAt: now.toDate().toISOString(),
   };
@@ -85,6 +118,9 @@ export async function getProduct(): Promise<Product[]> {
       publicId: publicIds[0] ?? String(data.publicId ?? ""),
       imageUrls,
       publicIds,
+      rating: Number(data.rating ?? 0),
+      reviewCount: Number(data.reviewCount ?? 0),
+      reviews: parseReviews(data.reviews),
       createdAt: data.createdAt?.toDate?.().toISOString(),
       updatedAt: data.updatedAt?.toDate?.().toISOString(),
     };
@@ -119,6 +155,9 @@ export async function getProductById(id: string): Promise<Product | null> {
     publicId: publicIds[0] ?? String(data.publicId ?? ""),
     imageUrls,
     publicIds,
+    rating: Number(data.rating ?? 0),
+    reviewCount: Number(data.reviewCount ?? 0),
+    reviews: parseReviews(data.reviews),
     createdAt: data.createdAt?.toDate?.().toISOString(),
     updatedAt: data.updatedAt?.toDate?.().toISOString(),
   };
@@ -135,6 +174,46 @@ export async function updateProduct(
     .update({ ...input, updatedAt: now });
   const updated = await getProductById(id);
   return updated!;
+}
+
+export async function addProductReview(
+  id: string,
+  input: AddProductReviewInput,
+): Promise<Product | null> {
+  const docRef = adminDb.collection(COLLECTION_NAME).doc(id);
+  const doc = await docRef.get();
+  if (!doc.exists) return null;
+
+  const data = doc.data()!;
+  const currentReviews = parseReviews(data.reviews);
+  const currentRating = Number(data.rating ?? 0);
+  const currentReviewCount = Number(data.reviewCount ?? 0);
+  const nextReviewCount = currentReviewCount + 1;
+  const nextRating =
+    nextReviewCount > 0
+      ? Number(((currentRating * currentReviewCount + input.rating) / nextReviewCount).toFixed(1))
+      : input.rating;
+
+  const now = Timestamp.now();
+  const newReview: Review = {
+    id: `${doc.id}-${now.toMillis()}`,
+    userId: input.userId,
+    userName: input.userName,
+    rating: Number(input.rating),
+    comment: input.comment,
+    createdAt: now.toDate().toISOString(),
+  };
+
+  const nextReviews = [...currentReviews, newReview];
+
+  await docRef.update({
+    reviews: nextReviews,
+    rating: nextRating,
+    reviewCount: nextReviewCount,
+    updatedAt: now,
+  });
+
+  return getProductById(id);
 }
 
 export async function deleteProduct(id: string): Promise<boolean> {
