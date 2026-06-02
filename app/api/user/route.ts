@@ -1,4 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
+import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase-admin";
 
 // GET /api/user — devuelve todos los usuarios o uno por uid
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     // Devolver todos los usuarios
     const snapshot = await adminDb.collection("users").orderBy("createdAt", "desc").get();
-    const usuarios = snapshot.docs.map((doc) => {
+    const usuarios = snapshot.docs.map((doc: QueryDocumentSnapshot) => {
       const data = doc.data();
       return {
         uid: doc.id,
