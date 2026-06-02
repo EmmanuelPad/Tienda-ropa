@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { useCart } from "@/lib/CartContext";
@@ -10,6 +11,7 @@ import CartSidebar from "@/components/layout/CartSidebar";
 import Link from "next/link";
 
 export default function CarritoPage() {
+  const router = useRouter();
   const {
     items,
     removeFromCart,
@@ -107,13 +109,13 @@ export default function CarritoPage() {
           <p className="text-slate-400">
             Gracias por tu compra. Tu pago se ha procesado correctamente.
           </p>
-          <Link
-            href="/dashboard"
+          <button
+            onClick={() => router.push("/dashboard")}
             className="rounded-full bg-pink-500 px-8 py-3 font-semibold text-white
-              shadow-lg shadow-pink-500/30 transition hover:bg-pink-400"
+              shadow-lg shadow-pink-500/30 transition hover:bg-pink-400 cursor-pointer"
           >
             Seguir comprando
-          </Link>
+          </button>
         </div>
       </main>
     );
@@ -131,13 +133,13 @@ export default function CarritoPage() {
           <p className="text-slate-400">
             No se completó el pago. Puedes intentar de nuevo cuando quieras.
           </p>
-          <Link
-            href="/carrito"
+          <button
+            onClick={() => router.push("/carrito")}
             className="rounded-full bg-pink-500 px-8 py-3 font-semibold text-white
-              shadow-lg shadow-pink-500/30 transition hover:bg-pink-400"
+              shadow-lg shadow-pink-500/30 transition hover:bg-pink-400 cursor-pointer"
           >
             Volver al carrito
-          </Link>
+          </button>
         </div>
       </main>
     );

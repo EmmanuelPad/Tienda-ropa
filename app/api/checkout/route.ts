@@ -15,9 +15,7 @@ function getStripe() {
   if (!secretKey) {
     throw new Error("Missing STRIPE_SECRET_KEY environment variable");
   }
-  return new Stripe(secretKey, {
-    apiVersion: "2026-05-27.dahlia",
-  });
+  return new Stripe(secretKey);
 }
 
 export async function POST(req: Request) {
@@ -62,8 +60,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error("Stripe checkout error:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
-      { error: "No se pudo crear la sesión de pago." },
+      { error: `No se pudo crear la sesión de pago. Detalles: ${errorMessage}` },
       { status: 500 }
     );
   }
