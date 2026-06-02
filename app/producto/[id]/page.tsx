@@ -50,6 +50,8 @@ export default function ProductoPage() {
   const [reviewError, setReviewError] = useState("");
   const [reviewSuccess, setReviewSuccess] = useState("");
   const [reviewLoading, setReviewLoading] = useState(false);
+  const [categoriesMap, setCategoriesMap] = useState<Record<string, string>>({});
+  const [categoryNames, setCategoryNames] = useState<string[]>([]);
 
   const { addToCart } = useCart();
 
@@ -84,6 +86,38 @@ export default function ProductoPage() {
       .catch(() => router.replace("/dashboard"))
       .finally(() => setLoading(false));
   }, [id, router]);
+
+  useEffect(() => {
+    if (!id) return;
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok && Array.isArray(data.data)) {
+          const map: Record<string, string> = {};
+          data.data.forEach((category: { id: string; name: string }) => {
+            map[category.id] = category.name;
+          });
+          setCategoriesMap(map);
+        }
+      })
+      .catch(() => {
+        setCategoriesMap({});
+      });
+  }, [id]);
+
+  useEffect(() => {
+    if (!product) {
+      setCategoryNames([]);
+      return;
+    }
+    if (Object.keys(categoriesMap).length === 0) {
+      setCategoryNames(product.categories ?? []);
+      return;
+    }
+    setCategoryNames(
+      product.categories.map((categoryId) => categoriesMap[categoryId] ?? categoryId),
+    );
+  }, [product, categoriesMap]);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -238,9 +272,9 @@ export default function ProductoPage() {
           {/* ── Info ── */}
           <div className="flex flex-col gap-6">
             {/* Categorías */}
-            {product.categories?.length > 0 && (
+            {categoryNames?.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {product.categories.map((cat) => (
+                {categoryNames.map((cat) => (
                   <span
                     key={cat}
                     className="rounded-full bg-pink-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-pink-300"

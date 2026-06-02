@@ -4,6 +4,11 @@ import { useRequireRole } from "@/lib/useRequireRole";
 import Link from "next/link";
 import AdminHeader from "@/components/layout/AdminHeader";
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -11,16 +16,23 @@ interface Product {
   price: number;
   stock: number;
   description: string;
+  rating?: number;
+  reviewCount?: number;
 }
 
 export default function AdminProductosPage() {
   const { loading: roleLoading, isAdmin } = useRequireRole("admin");
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [minRating, setMinRating] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!roleLoading && isAdmin) fetchProducts();
+    if (!roleLoading && isAdmin) {
+      fetchProducts();
+      fetchCategories();
+    }
   }, [roleLoading, isAdmin]);
 
   async function fetchProducts() {
@@ -39,6 +51,18 @@ export default function AdminProductosPage() {
     }
   }
 
+  async function fetchCategories() {
+    try {
+      const res = await fetch("/api/categories");
+      const data = await res.json();
+      if (data.ok) {
+        setCategories(data.data ?? []);
+      }
+    } catch {
+      // No bloquear la carga de productos.
+    }
+  }
+
   async function deleteProduct(id: string) {
     if (!confirm("¿Estás seguro de eliminar este producto?")) return;
 
@@ -53,6 +77,18 @@ export default function AdminProductosPage() {
       alert("Error de conexión");
     }
   }
+
+  const categoriesById = categories.reduce<Record<string, string>>(
+    (acc, category) => {
+      acc[category.id] = category.name;
+      return acc;
+    },
+    {},
+  );
+
+  const filteredProducts = products.filter(
+    (product) => (product.rating ?? 0) >= minRating,
+  );
 
   if (roleLoading || loading) {
     return (
@@ -69,7 +105,7 @@ export default function AdminProductosPage() {
     <main className="min-h-screen bg-slate-950 text-white">
       <AdminHeader />
       <div className="mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-8 flex items-center justify-between">
+        <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-medium text-emerald-400">
               Administración
@@ -87,6 +123,27 @@ export default function AdminProductosPage() {
           >
             + Nuevo producto
           </Link>
+        </div>
+
+        <div className="mb-6 flex flex-wrap items-center gap-3">
+          <label className="text-sm font-medium text-slate-300">
+            Filtrar por calificación:
+          </label>
+          <select
+            value={minRating}
+            onChange={(event) => setMinRating(Number(event.target.value))}
+            className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white outline-none transition focus:border-emerald-400"
+          >
+            <option value={0}>Todas</option>
+            <option value={5}>5 estrellas</option>
+            <option value={4}>4 estrellas o más</option>
+            <option value={3}>3 estrellas o más</option>
+            <option value={2}>2 estrellas o más</option>
+            <option value={1}>1 estrella o más</option>
+          </select>
+          <span className="text-sm text-slate-400">
+            Mostrando {filteredProducts.length} de {products.length}
+          </span>
         </div>
 
         {error && (
@@ -109,6 +166,9 @@ export default function AdminProductosPage() {
                   Precio
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-slate-400">
+                  Calificación
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider text-slate-400">
                   Stock
                 </th>
                 <th className="px-6 py-4 text-right text-xs font-medium uppercase tracking-wider text-slate-400">
@@ -127,7 +187,7 @@ export default function AdminProductosPage() {
                   </td>
                 </tr>
               ) : (
-                products.map((product) => (
+                filteredProducts.map((product) => (
                   <tr key={product.id} className="hover:bg-slate-800/30">
                     <td className="px-6 py-4">
                       <div className="font-medium text-white">
@@ -139,11 +199,16 @@ export default function AdminProductosPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="rounded-full border border-slate-700 bg-slate-800/50 px-2 py-1 text-xs text-slate-300">
-                        {product.categories.join(", ")}
+                        {product.categories
+                          .map((categoryId) => categoriesById[categoryId] ?? categoryId)
+                          .join(", ")}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-300">
                       ${product.price.toLocaleString("es-MX")}
+                    </td>
+                    <td className="px-6 py-4 text-slate-300">
+                      {product.rating ? `${product.rating.toFixed(1)} ★` : "—"}
                     </td>
                     <td className="px-6 py-4">
                       <span
