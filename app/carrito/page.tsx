@@ -20,14 +20,9 @@ export default function CarritoPage() {
   } = useCart();
   const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
-<<<<<<< HEAD
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [checkoutCanceled, setCheckoutCanceled] = useState(false);
-=======
-  const [checkoutDone, setCheckoutDone] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
->>>>>>> d2e0c15cc20cf43ffac1d92f0083a1fc957dcb3b
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -48,71 +43,46 @@ export default function CarritoPage() {
   }, []);
 
   useEffect(() => {
-<<<<<<< HEAD
-    const searchParams = new URL(window.location.href).searchParams;
-    setCheckoutSuccess(searchParams.get("success") === "1");
-    setCheckoutCanceled(searchParams.get("canceled") === "1");
-  }, []);
-=======
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("success") === "true") {
       clearCart();
-      setCheckoutDone(true);
+      setCheckoutSuccess(true);
+    }
+    if (params.get("canceled") === "true") {
+      setCheckoutCanceled(true);
     }
   }, [clearCart]);
->>>>>>> d2e0c15cc20cf43ffac1d92f0083a1fc957dcb3b
 
   const envio = 0;
   const total = subtotal + envio;
 
   const handleCheckout = async () => {
-<<<<<<< HEAD
     if (items.length === 0 || checkoutLoading) return;
-=======
-    if (items.length === 0) return;
->>>>>>> d2e0c15cc20cf43ffac1d92f0083a1fc957dcb3b
     setCheckoutLoading(true);
 
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
-<<<<<<< HEAD
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ items }),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.url) {
-        throw new Error(data.error || "No se pudo iniciar el pago.");
-=======
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items }),
       });
+
       const data = await res.json();
 
       if (!res.ok || !data.url) {
-        throw new Error(data.error || "Error al iniciar el pago");
->>>>>>> d2e0c15cc20cf43ffac1d92f0083a1fc957dcb3b
+        throw new Error(data.error || "No se pudo iniciar el pago.");
       }
 
       window.location.href = data.url;
     } catch (error) {
       console.error(error);
-<<<<<<< HEAD
+      setCheckoutLoading(false);
       window.alert(
         error instanceof Error
           ? error.message
           : "Error al procesar el pago. Intenta de nuevo."
       );
-    } finally {
-      setCheckoutLoading(false);
-=======
-      setCheckoutLoading(false);
-      alert("No se pudo iniciar el pago. Intenta de nuevo.");
->>>>>>> d2e0c15cc20cf43ffac1d92f0083a1fc957dcb3b
     }
   };
 
@@ -360,21 +330,12 @@ export default function CarritoPage() {
 
               <button
                 onClick={handleCheckout}
-<<<<<<< HEAD
                 disabled={checkoutLoading || items.length === 0}
                 className="mt-6 w-full rounded-2xl bg-pink-500 py-4 font-bold text-white
                   shadow-lg shadow-pink-500/30 transition hover:bg-pink-400 active:scale-[0.98]
                   disabled:cursor-not-allowed disabled:bg-slate-700 disabled:text-slate-300"
               >
                 {checkoutLoading ? "Redirigiendo a Stripe..." : "Proceder al pago →"}
-=======
-                disabled={checkoutLoading}
-                className="mt-6 w-full rounded-2xl bg-pink-500 py-4 font-bold text-white
-                  shadow-lg shadow-pink-500/30 transition hover:bg-pink-400 active:scale-[0.98]
-                  disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {checkoutLoading ? "Redirigiendo..." : "Proceder al pago →"}
->>>>>>> d2e0c15cc20cf43ffac1d92f0083a1fc957dcb3b
               </button>
 
               <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-500">
