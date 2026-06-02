@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       .orderBy("createdAt", "desc")
       .get();
 
-    const usuarios = snapshot.docs.map((doc) => {
+    const usuarios = snapshot.docs.map((doc: any) => {
       const data = doc.data();
       return {
         uid: doc.id,
