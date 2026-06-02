@@ -1,4 +1,5 @@
 import { Timestamp } from "firebase-admin/firestore";
+import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
 import { adminDb } from "../firebase-admin";
 import { CreateCategoryInput, Category } from "./categorias";
 
@@ -31,7 +32,7 @@ export async function getCategory(): Promise<Category[]> {
     .orderBy("createdAt", "desc")
     .get();
 
-  const categories = snapshot.docs.map((doc) => {
+  const categories = snapshot.docs.map((doc: QueryDocumentSnapshot) => {
     const data = doc.data();
     return {
       id: doc.id,

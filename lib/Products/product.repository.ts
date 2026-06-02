@@ -1,4 +1,5 @@
 import { Timestamp } from "firebase-admin/firestore";
+import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
 import { adminDb } from "../firebase-admin";
 import {
   AddProductReviewInput,
@@ -100,7 +101,7 @@ export async function getProduct(): Promise<Product[]> {
     .orderBy("createdAt", "desc")
     .get();
 
-  return snapshot.docs.map((doc) => {
+  return snapshot.docs.map((doc: QueryDocumentSnapshot) => {
     const data = doc.data();
     const imageUrls = Array.isArray(data.imageUrls)
       ? data.imageUrls.map(String)
