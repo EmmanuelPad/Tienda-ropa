@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase-client";
 import { useCart } from "@/lib/CartContext";
@@ -8,7 +9,6 @@ import PublicHeader from "@/components/layout/PublicHeader";
 import AdminHeader from "@/components/layout/AdminHeader";
 import CartSidebar from "@/components/layout/CartSidebar";
 import Link from "next/link";
-import Image from "next/image";
 
 export default function CarritoPage() {
   const {
@@ -22,6 +22,8 @@ export default function CarritoPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [checkoutDone, setCheckoutDone] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -41,12 +43,38 @@ export default function CarritoPage() {
     return () => unsub();
   }, []);
 
+  useEffect(() => {
+    if (searchParams.get("success") === "true") {
+      clearCart();
+      setCheckoutDone(true);
+    }
+  }, [searchParams, clearCart]);
+
   const envio = 0;
   const total = subtotal + envio;
 
-  const handleCheckout = () => {
-    clearCart();
-    setCheckoutDone(true);
+  const handleCheckout = async () => {
+    if (items.length === 0) return;
+    setCheckoutLoading(true);
+
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Error al iniciar el pago");
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error(error);
+      setCheckoutLoading(false);
+      alert("No se pudo iniciar el pago. Intenta de nuevo.");
+    }
   };
 
   if (authLoading) {
@@ -269,10 +297,12 @@ export default function CarritoPage() {
 
               <button
                 onClick={handleCheckout}
+                disabled={checkoutLoading}
                 className="mt-6 w-full rounded-2xl bg-pink-500 py-4 font-bold text-white
-                  shadow-lg shadow-pink-500/30 transition hover:bg-pink-400 active:scale-[0.98]"
+                  shadow-lg shadow-pink-500/30 transition hover:bg-pink-400 active:scale-[0.98]
+                  disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Proceder al pago →
+                {checkoutLoading ? "Redirigiendo..." : "Proceder al pago →"}
               </button>
 
               <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-slate-500">
